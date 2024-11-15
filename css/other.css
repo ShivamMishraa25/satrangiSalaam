@@ -1,0 +1,77 @@
+.container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1{
+            font-family: 'Rozha One', serif;
+            font-size: 16px;
+            margin-top: 30px;
+            z-index: 1;
+            text-decoration: underline;
+            text-align: center;
+            
+            
+        }
+
+h2.section-title {
+  text-align: left;
+  font-family: 'Rozha One', serif;
+  text-decoration: underline;
+}
+
+        h2 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 40px;
+        }
+
+        .section1 {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .section1 img {
+            float: right;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-left: 20px;
+        }
+
+        .section1 h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .section1 p {
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .credits {
+            margin-top: 30px;
+        }
+
+        .credits h3 {
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+
+        .credits ul {
+            list-style-type: square;
+            padding-left: 20px;
+        }
+
+        .credits ul li {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .left {
+            color: black;
+        }

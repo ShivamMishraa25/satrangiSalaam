@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="hi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Donate</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Rozha+One&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../css/pages.css">
+        <style>
+          .form-container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            color: black;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+        </style>
+    </head>
+    <body>
+        <header>
+            <!-- Logo or homepage anchor -->
+            <a href="SatrangiSalaam.html" class="logo">
+            <img src="../img/satrangiSalaamLogo.png"
+                alt="satrangi Salaam Logo">
+            </a>
+            <!-- Burger Icon -->
+            <div class="menu-icon" id="menu-icon"></div>
+            <!-- Slide-in Menu -->
+            <nav id="nav-menu">
+            <ul>
+                <li><a href="about_us.html">हमारे बारे में</a></li>
+                <li><a href="announcements.html">सूचनाएं (अपडेट्स)</a></li>
+                <li><a href="gallery.html">गैलरी</a></li>
+                <li><a href="impact.html">बदलाव (असर)</a></li>
+                <li><a href="events.html">हमारे कार्यक्रम</a></li>
+                <li><a href="in_the_news.html">खबरों में हम</a></li>
+                <li><a href="collaborators.html">हमारे कॉलेब्रेटर्स (सहयोगी)</a></li>
+                <li><a href="sponsors.html">हमारे स्पॉन्सर्स</a></li>
+                <li><a href="write_article.html">आर्टिकल लिखें</a></li>
+                <li><a href="officers.html">हमारे पदाधिकारी</a></li>
+                <li><a href="affiliates.html">हमारे स्वायत्त व अधीनस्थ संस्थाएं</a></li>
+                <li><a href="reach.html">प्रदेश व विभिन्न स्तर पर हम</a></li>
+                <li><a href="join_us.html">हम से जुड़े (सदस्यता)</a></li>
+                <li><a href="careers.html">करियर (पेशेवर) विकास के अवसर</a></li>
+                <li><a href="other.html">अन्य</a></li>
+            </ul>
+            <div class="social-icons">
+            <a href="https://satrangisalaam.wordpress.com/about-what-is-satrangi-salaam-what-is-its-purpose-be-a-volunteer/"><img src="https://s.w.org/style/images/about/WordPress-logotype-wmark-white.png" alt="WordPress"></a></li>
+            <a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a>
+            <a href="https://twitter.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Twitter_colored_svg-256.png" alt="Twitter"></a>
+            <a href="https://instagram.com/satrangisalaam"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a>
+            <a href="http://satrangisalaam.tumblr.com/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Tumblr2_colored_svg-256.png" alt="Tumblr"></a>
+        </header>
+        <!-- Bird Image for animation -->
+        <img id="bird" src="../img/bird.png" alt="Flying Bird">
+        <img id="bird2" src="../img/bird2.png" alt="flying bird">
+          <!-- About Us Section -->
+          <section class="content">
+    <h1 class="section-title">सहयोग करें (Donate)</h1>
+<img src="../img/qr.jpg" alt="qr code" height="75%" width="75%" style="border-radius: 8px;">
+<h2>UPI Id:</h2>
+<p><b>bhartenduvimalumang@okhdfbank</b></p>
+
+<div class="form-container">
+  <h2 class="section-title">सर्टिफ़िकेट प्राप्त करने के लिए यह फॉर्म भरें।</h2>
+  <form action="../includes/submit_donation.php" method="POST">
+    <div class="form-group">
+      <label for="name"><b>Name:</b></label>
+      <input type="text" id="name" name="name" placeholder="आपका नाम" required>
+    </div>
+    <div class="form-group">
+      <label for="amount"><b>Amount:</b></label>
+      <input type="number" id="amount" name="amount" placeholder="दान की गई धन राशि" required>
+    </div>
+    <div class="form-group">
+      <label for="email"><b>Email:</b></label>
+      <input type="email" id="email" name="email" placeholder="आपका ईमेल" name="email" required>
+    </div>
+    <div class="form-group">
+      <label for="number"><b>Whatsapp Number:</b></label>
+      <input type="number" id="whatsapp" name="number" placeholder="आपका व्हाट्सएप नंबर" name="whatsapp" required>
+    </div>
+    <input type="submit" value="Submit">
+  </form>
+</div>
+<br><br>
+<p class="left">सतरंगी सलाम जो कुछ भी कर रहा है, वो आप सभी के प्यार और विभिन्न प्रकार के समर्थन के माध्यम से ही कर रहा है ।<br/><br>
+
+  सतरंगी सलाम का आप विभिन्न प्रकार से सहयोग कर सकते है, <span class="highlight">आप अपने क्षेत्र में सतरंगी सलाम के नेक उद्देश्यों को पूरा करने के लिए गतिविधियां संचालित कर सकते है</span>, जिसमें हमारा पूरा सहयोग रहेगा ।
+<br><br>
+  आप सतरंगी सलाम से जुड़ सकते है ।
+  <b>सतरंगी सलाम के साथ कोलेब्रेशन (गठजोड़) कर सकते है ।</b>
+  आप सतरंगी सलाम के डिजिटल कार्यों में मदद कर सकते है ।
+<br><br>
+  कार्यक्रमों को संचालित करने और विभिन्न चीजों के लिए सतरंगी सलाम को आर्थिक सहयोग की भी आवश्यकता होती है, जिसके लिए आप से जितना बन पाता है, उतना डोनेट कीजिये ।<br><br>
+  <span class="highlight"><b>आप 10 रुपए से ले करके जितना चाहे उतना डोनेट कर सकते है ।</b></span>
+  डोनेशन स्वैच्छिक होना चाहिए, किसी भी प्रकार का दवाब नहीं ।
+<br><br>
+  अगर किसी भी प्रकार का सवाल है तो पहले उसका जवाब ले ले फिर दान करें ।
+<br><br>
+  दान नियत आईडी पर ही करें और आवश्यकता पड़ने पर एक बार संपर्क सूत्र पर संपर्क कर लें ।
+  <b>हो सके तो दान करने के बाद Gmail या नम्बर पर संपर्क कर ले और स्क्रीनशॉट भेज दें ।</b>
+<br><br>
+  <b><span class="highlight">हम आपको दान करने का एक ऑनलाइन प्रमाण पत्र भी प्रदान करेंगे </span></b>।</p>
+          </section>
+        <footer>
+            <ul>
+                <li><a href="SatrangiSalaam@gmail.com"><img src="https://cdn4.iconfinder.com/data/icons/social-media-logos-6/512/112-gmail_email_mail-1024.png" alt="Email"></a></li>
+                <li><a href="https://satrangisalaam.wordpress.com/about-what-is-satrangi-salaam-what-is-its-purpose-be-a-volunteer/"><img src="https://s.w.org/style/images/about/WordPress-logotype-wmark-white.png" alt="WordPress"></a></li>
+                <li><a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a></li>
+                <li><a href="https://twitter.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Twitter_colored_svg-256.png" alt="Twitter"></a></li>
+                <li><a href="https://instagram.com/satrangisalaam"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a></li>
+                <li><a href="http://satrangisalaam.tumblr.com/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Tumblr2_colored_svg-256.png" alt="Tumblr"></a></li>
+            </ul>
+            <div class="darkmode">
+              <span>switch to dark/light mode</span>
+            <button id="toggle-button" class="toggle-btn"></button>
+            </div>
+        </footer>
+        <script>
+          const menuIcon = document.getElementById("menu-icon");
+          const navMenu = document.getElementById("nav-menu");
+        
+          menuIcon.addEventListener("click", () => {
+            menuIcon.classList.toggle("open");
+            navMenu.classList.toggle("open");
+          });
+        
+          // Bird movement based on scroll position
+          window.addEventListener('scroll', function() {
+            let scrollPosition = window.scrollY;
+            let bird = document.getElementById('bird');
+        
+            let birdX = scrollPosition * 0.5; // Horizontal movement (right)
+            let birdY = scrollPosition * -0.5; // Vertical movement (up)
+        
+            bird.style.transform = `translate(${birdX}px, ${birdY}px)`;
+          });
+        
+          // Bird movement based on scroll position bird2
+          window.addEventListener('scroll', function() {
+            let scrollPosition = window.scrollY;
+            let bird = document.getElementById('bird2');
+        
+            let birdX = scrollPosition * 0.5; // Horizontal movement (right)
+            let birdY = scrollPosition * -0.5; // Vertical movement (up)
+        
+            bird.style.transform = `translate(${birdX}px, ${birdY}px)`;
+          });
+        
+          // Select the toggle button
+          const toggleButton = document.getElementById('toggle-button');
+          const body = document.body;
+        
+          // Function to set a cookie
+          function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+          }
+        
+          // Function to get a cookie by name
+          function getCookie(name) {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.startsWith(name + '=')) {
+                return cookie.substring(name.length + 1);
+              }
+            }
+            return null;
+          }
+        
+          // Function to apply the correct theme based on the saved preference
+          function applyTheme(theme) {
+            const isDarkMode = theme === 'dark';
+            body.classList.toggle('dark', isDarkMode); // Apply dark mode class if necessary
+            toggleButton.classList.toggle('active', isDarkMode); // Set the toggle state accordingly
+          }
+        
+          // Toggle between light and dark mode
+          function toggleMode() {
+            const isDarkMode = body.classList.toggle('dark'); // Toggle class
+            const mode = isDarkMode ? 'dark' : 'light';
+            setCookie('theme', mode, 7); // Save the chosen mode in the cookie
+            toggleButton.classList.toggle('active', isDarkMode); // Reflect the switch state
+          }
+        
+          // On page load, check the saved preference and apply it
+          window.onload = function() {
+            const savedMode = getCookie('theme') || 'light'; // Default to light mode if no cookie
+            applyTheme(savedMode); // Apply the theme based on the saved cookie
+          };
+        
+          // Add event listener to toggle the mode when the button is clicked
+          toggleButton.addEventListener('click', toggleMode);
+        </script>
+    </body>
+</html>

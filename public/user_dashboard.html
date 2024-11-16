@@ -1,0 +1,118 @@
+<?php
+session_start();
+require '../includes/db.php'; // Include database connection
+
+// Check if user is logged in
+if (!isset($_SESSION['user_logged_in'])) {
+    header("Location: user_login.php");
+    exit();
+}
+  
+// Get user ID from session
+$user_id = $_SESSION['user_id'];
+
+// Fetch user information from the users table
+$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+?>
+<!DOCTYPE html>
+<html lang="hi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Member Dashboard</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Rozha+One&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../css/pages.css">
+        <style>
+            .link {
+                background-color: rgb(245, 245, 245);
+                border-bottom: 2px solid lightgrey;
+                border-right: 2px solid lightgrey;
+                border-left: 2px solid lightgrey;
+                padding: 2px;
+                border-radius: 1px;
+            }
+            .container {
+                background-color: white;
+                border-radius: 5px;
+                display: inline-block;
+                padding: 4px;
+                color: black;
+            }          
+            </style>
+    </head>
+    <body>
+        <header>
+            <!-- Logo or homepage anchor -->
+            <a href="../index.php" class="logo">
+            <img src="../img/satrangiSalaamLogo.png"
+                alt="satrangi Salaam Logo">
+            </a>
+            <!-- Burger Icon -->
+            <div class="menu-icon" id="menu-icon"></div>
+            <!-- Slide-in Menu -->
+            <nav id="nav-menu">
+            <ul>
+                <li><a href="aboutUs.php">हमारे बारे में</a></li>
+                <li><a href="announcements.php">सूचनाएं (अपडेट्स)</a></li>
+                <li><a href="gallery.php">गैलरी</a></li>   
+                <li><a href="events.php">हमारे कार्यक्रम</a></li>
+                <li><a href="joinUs.php">हम से जुड़े (सदस्यता)</a></li>
+                <li><a href="donate.php">सहयोग करें (donate)</a></li>
+                <li><a href="careers.php">करियर (पेशेवर) विकास के अवसर</a></li>
+                <li><a href="officers.php">हमारे पदाधिकारी</a></li>
+                <li><a href="writeArticle.php">आर्टिकल लिखें</a></li>
+                <li><a href="inTheNews.php">खबरों में हम</a></li>               
+                <li><a href="collaboratorsAndSponsors.php">हमारे सहयोगी</a></li>
+                <li><a href="impact.php">बदलाव (असर)</a></li>               
+                <li><a href="affiliates.php">हमारे स्वायत्त व अधीनस्थ संस्थाएं</a></li>
+                <li><a href="reach.php">प्रदेश व विभिन्न स्तर पर हम</a></li>                                
+                <li><a href="other.php">अन्य</a></li>
+            </ul>
+            <div class="social-icons">
+                <a href="https://youtube.com/@satrangisalaam/"><img src="https://cdn1.iconfinder.com/data/icons/logotypes/32/youtube-512.png"></a>
+                <a href="https://www.instagram.com/satrangisalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a>
+                <a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a>
+                <a href="satrangisalamss@gmail.com"><img src="https://cdn4.iconfinder.com/data/icons/logos-brands-in-colors/48/google-gmail-512.png" alt="Email"></a>
+                <a href="https://x.com/SatrangiSalamSS/"><img src="https://cdn2.iconfinder.com/data/icons/threads-by-instagram/24/x-logo-twitter-new-brand-contained-512.png" alt="Twitter"></a>
+        </header>
+        <!-- Bird Image for animation -->
+        <img id="bird" src="../img/bird.png" alt="Flying Bird">
+        <img id="bird2" src="../img/bird2.png" alt="flying bird">
+          <section class="content">
+                <h2>Welcome, <?php echo $user['name'] . '!'; ?></h2>
+
+    <!-- Display the ID card and download option -->
+    <div class="container">
+        <p>ID Card for: <?php echo $user['name']; ?></p>
+        <a class="link" href="../includes/generate_id.php?user_id=<?php echo $_SESSION['user_id']; ?>"target="_blank">Download ID</a>
+    </div>
+
+    <div class="left">
+    <a class="link" href="user_logout.php">Logout</a>
+        </div>
+          </section>
+        <footer>
+            <ul>
+                <li><a href="https://youtube.com/@satrangisalaam/"><img src="https://cdn1.iconfinder.com/data/icons/logotypes/32/youtube-512.png"></a></li>
+                <li><a href="https://www.instagram.com/satrangisalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a></li>
+                <li><a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a></li>
+                <li><a href="https://satrangisalaam.wordpress.com/"><img src="https://cdn4.iconfinder.com/data/icons/iconsimple-logotypes/512/wordpress-512.png" alt="WordPress"></a></li>
+                <li><a href="https://chat.whatsapp.com/Jifh0MGROxAJQD4bueRFN0"><img src="https://cdn3.iconfinder.com/data/icons/2018-social-media-logotypes/1000/2018_social_media_popular_app_logo-whatsapp-512.png"></a></li>
+                <li><a href="https://t.me/SatrangiSalam"><img src="https://cdn4.iconfinder.com/data/icons/logos-and-brands/512/335_Telegram_logo-512.png"></a></li>
+                <li><a href="https://x.com/SatrangiSalamSS/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Twitter_colored_svg-256.png" alt="Twitter"></a></li>
+            </ul>
+            <div class="darkmode">
+              <span>switch to dark/light mode</span>
+            <button id="toggle-button" class="toggle-btn"></button>
+            </div>
+        </footer>
+        <script type="text/javascript" src="../js/pages.js"></script>
+    </body>
+</html>

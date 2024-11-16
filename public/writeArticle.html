@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="hi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta property="og:site_name" content="Satrangi Salaam">
+<meta property="og:title" content="Write Article">
+<meta property="og:description" content="Read and Write Articles that will be dsiplayed on website for everyone to read. Share your thoughts with the World.">
+
+<meta property="og:image" itemprop="image" content="https://i.ibb.co/nz0bLWN/Satrangi-Salaam-300.jpg">
+<meta property="og:type" content="website" />
+<meta property="og:image:type" content="image/jpg">
+
+<meta property="og:image:width" content="300">
+<meta property="og:image:height" content="300">
+
+<!--  <meta property="og:url" content="http://satrangisalaam.in">  -->
+        <title>Write Articles</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Rozha+One&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../css/pages.css">
+    </head>
+    <body>
+        <header>
+            <!-- Logo or homepage anchor -->
+            <a href="../index.html" class="logo">
+            <img src="../img/satrangiSalaamLogo.png"
+                alt="satrangi Salaam Logo">
+            </a>
+            <!-- Burger Icon -->
+            <div class="menu-icon" id="menu-icon"></div>
+            <!-- Slide-in Menu -->
+            <nav id="nav-menu">
+            <ul>
+                <li><a href="aboutUs.html">हमारे बारे में</a></li>
+                <li><a href="announcements.html">सूचनाएं (अपडेट्स)</a></li>
+                <li><a href="gallery.html">गैलरी</a></li>   
+                <li><a href="events.html">हमारे कार्यक्रम</a></li>
+                <li><a href="joinUs.html">हम से जुड़े (सदस्यता)</a></li>
+                <li><a href="donate.html">सहयोग करें (donate)</a></li>
+                <li><a href="careers.html">करियर (पेशेवर) विकास के अवसर</a></li>
+                <li><a href="officers.html">हमारे पदाधिकारी</a></li>
+                <li><a href="writeArticle.html">आर्टिकल लिखें</a></li>
+                <li><a href="inTheNews.html">खबरों में हम</a></li>               
+                <li><a href="collaboratorsAndSponsors.html">हमारे सहयोगी</a></li>
+                <li><a href="impact.html">बदलाव (असर)</a></li>               
+                <li><a href="affiliates.html">हमारे स्वायत्त व अधीनस्थ संस्थाएं</a></li>
+                <li><a href="reach.html">प्रदेश व विभिन्न स्तर पर हम</a></li>                                
+                <li><a href="other.html">अन्य</a></li>
+            </ul>
+            <div class="social-icons">
+                <a href="https://youtube.com/@satrangisalaam/"><img src="https://cdn1.iconfinder.com/data/icons/logotypes/32/youtube-512.png"></a>
+                <a href="https://www.instagram.com/satrangisalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a>
+                <a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a>
+                <a href="satrangisalamss@gmail.com"><img src="https://cdn4.iconfinder.com/data/icons/logos-brands-in-colors/48/google-gmail-512.png" alt="Email"></a>
+                <a href="https://x.com/SatrangiSalamSS/"><img src="https://cdn2.iconfinder.com/data/icons/threads-by-instagram/24/x-logo-twitter-new-brand-contained-512.png" alt="Twitter"></a>
+        </header>
+        <!-- Bird Image for animation -->
+        <img id="bird" src="../img/bird.png" alt="Flying Bird">
+        <img id="bird2" src="../img/bird2.png" alt="flying bird">
+          <section class="content">
+            <h1 class="section-title">आर्टिकल लिखें व पढ़ें</h1>
+          <a href="../includes/article_form.html" class="btn-highlight">अपना आर्टिकल लिखें</a>
+
+                <?php
+include '../includes/db.html'; // Include your database connection
+
+// Fetch articles ordered by the latest first
+$sql = "SELECT * FROM articles WHERE status = 'approved' ORDER BY created_at DESC";
+$result = mysqli_query($conn, $sql);
+
+echo "<h2 class='section-title'>विभन्न लेखकों द्वारा लिखे गये आर्टिकल्स</h2>";
+
+if (mysqli_num_rows($result) > 0) {
+while ($row = $result->fetch_assoc()) {
+    echo "<div class='article'>";
+    echo "<h3>" . htmlspecialchars($row['title']) . "</h3>"; // Article title
+    echo "<p><strong>By: </strong>" . htmlspecialchars($row['name']) . "</p>"; // Writer's name
+    echo "<p>" . htmlspecialchars($row['content']) . "</p>"; // Article content
+    echo "<p><strong>Contact: </strong>" . htmlspecialchars($row['contact']) . "</p>"; // Writer's contact
+    echo "<small>Posted on: " . $row['created_at'] . "</small>";
+    echo "</div><hr>";
+} }else {
+    echo "<p>No articles have been approved yet.</p>";
+}
+?>
+          </section>
+        <footer>
+            <ul>
+                <li><a href="https://youtube.com/@satrangisalaam/"><img src="https://cdn1.iconfinder.com/data/icons/logotypes/32/youtube-512.png"></a></li>
+                <li><a href="https://www.instagram.com/satrangisalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a></li>
+                <li><a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a></li>
+                <li><a href="https://satrangisalaam.wordpress.com/"><img src="https://cdn4.iconfinder.com/data/icons/iconsimple-logotypes/512/wordpress-512.png" alt="WordPress"></a></li>
+                <li><a href="https://chat.whatsapp.com/Jifh0MGROxAJQD4bueRFN0"><img src="https://cdn3.iconfinder.com/data/icons/2018-social-media-logotypes/1000/2018_social_media_popular_app_logo-whatsapp-512.png"></a></li>
+                <li><a href="https://t.me/SatrangiSalam"><img src="https://cdn4.iconfinder.com/data/icons/logos-and-brands/512/335_Telegram_logo-512.png"></a></li>
+                <li><a href="https://x.com/SatrangiSalamSS/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Twitter_colored_svg-256.png" alt="Twitter"></a></li>
+            </ul>
+            <div class="darkmode">
+              <span>switch to dark/light mode</span>
+            <button id="toggle-button" class="toggle-btn"></button>
+            </div>
+        </footer>
+        <script type="text/javascript" src="../js/pages.js"></script>
+    </body>
+</html>

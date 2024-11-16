@@ -1,0 +1,570 @@
+.btn-highlight {
+  background-color: #bd3939;
+  color: white;
+  padding: 15px 25px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.btn-highlight:hover {
+  background-color: #9addbd;
+  transform: scale(1.05);
+}
+
+.left {
+  text-align: left;
+}
+
+.highlight {
+  color: #399ba3;
+  font-weight: bold;
+}
+
+ol {
+  list-style-type: lower-roman;
+  /* Roman numerals */
+  padding-left: 20px;
+  /* Indentation to keep list aligned within the screen */
+  text-align: left;
+}
+
+.darkmode {
+  display: inline-flex;
+  align-items: center;
+}
+
+.darkmode span {
+  margin-right: 10px;
+}
+
+/* Style for the toggle button */
+.toggle-btn {
+  width: 32px;
+  height: 16px;
+  background-color: #ccc;
+  border-radius: 16px;
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  outline: none;
+  border: none;
+}
+
+/* Style for the slider inside the button */
+.toggle-btn::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  left: 1px;
+  top: 1px;
+  transition: 0.3s;
+}
+
+/* Style for the active (dark mode) state */
+.toggle-btn.active {
+  background-color: #333;
+  /* Dark background when active */
+}
+
+.toggle-btn.active::before {
+  transform: translateX(16px);
+  /* Moves the slider to the right */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #ebf0f1;
+  background-size: cover;
+  color: black;
+  line-height: 1.6;
+  min-height: 200vh;
+  overflow-x: hidden;
+}
+
+body.dark {
+  font-family: Arial, sans-serif;
+  background: #2a3950;
+  background-size: cover;
+  color: white;
+  line-height: 1.6;
+  min-height: 200vh;
+  overflow-x: hidden;
+
+  /* Navbar adjustments */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #41436a;
+    padding: 7px 20px 0px 7px;
+    box-shadow: 0 4px 10px #273449;
+    height: 100px;
+  }
+
+  /* Navbar Logo */
+  header .logo img {
+    background-image: url(../img/LogoBg.png);
+    background-size: 100px 100px;
+    max-width: 100px;
+    height: 100px;
+    z-index: 2000;
+  }
+
+  /* Burger Icon */
+  header .menu-icon {
+    font-size: 3rem;
+    cursor: pointer;
+    z-index: 2000;
+  }
+
+  /* Slide-in Panel */
+  #nav-menu {
+    position: fixed;
+    right: -100%;
+    top: 0;
+    width: 300px;
+    height: 100vh;
+    background-color: #914060;
+    padding: 20px;
+    transition: right 0.5s ease-in-out;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+
+  #nav-menu.open {
+    right: 0;
+  }
+
+  #nav-menu ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  #nav-menu ul li {
+    margin: 1px 0;
+  }
+
+  #nav-menu ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: color 0.3s;
+  }
+
+  #nav-menu ul li a:hover {
+    color: #ff9679;
+  }
+
+  /* Social Media Icons */
+  .social-icons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding: 10px 0;
+  }
+
+  .social-icons a {
+    display: inline-block;
+    margin-right: 10px;
+  }
+
+  .social-icons img {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Other content styling */
+  section {
+    padding: 20px 20px;
+  }
+
+  .content {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    z-index: 500;
+  }
+
+  .content h1 {
+    font-family: 'Rozha One', serif;
+    font-size: 3rem;
+    color: #973f65;
+    margin-top: 20px;
+    z-index: 1;
+    text-decoration: underline;
+  }
+
+  .rainbowline {
+    position: relative;
+    display: block;
+    text-align: center;
+    margin: 0 auto;
+    height: 4px;
+    /* Thickness of the underline */
+    width: 260px;
+    bottom: 18px;
+    background: #973f65;
+  }
+
+  @media (min-width: 682px) {
+    .rainbowline {
+      width: 340px;
+      height: 6px;
+    }
+
+    #nav-menu ul li a {
+      font-size: 1.12rem;
+      line-height: 1.2;
+    }
+  }
+
+  .section-title {
+    font-size: 1.8rem;
+    color: #973f65;
+    margin-top: 30px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    color: #973f65;
+    margin-top: 30px;
+
+  }
+
+  .title2 {
+    font-size: 1.4rem;
+    color: #973f65;
+    margin-top: 30px;
+  }
+
+  .section-content {
+    font-size: 1.2rem;
+    margin-top: 20px;
+    color: white;
+    text-align: left;
+  }
+
+  footer {
+    background-color: #41436a;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+  }
+
+  footer ul {
+    list-style-type: none;
+    display: flex;
+    justify-content: center;
+  }
+
+  footer ul li {
+    margin: 0 10px;
+  }
+
+  footer ul li a img {
+    width: 34px;
+    height: 34px;
+  }
+
+  footer p {
+    margin-top: 10px;
+    font-size: 0.9rem;
+  }
+
+  /* Bird image styling */
+  #bird2 {
+    display: block;
+    position: fixed;
+    bottom: -400px;
+    left: -550px;
+    width: 1000px;
+    height: 1000px;
+    opacity: 0.4;
+    z-index: -1;
+    transition: transform 0.5s ease-out;
+  }
+
+  #bird {
+    display: none;
+  }
+
+  /* Responsive fixes for desktop view */
+  @media (min-width: 768px) {
+    header {
+      padding: 10px 40px;
+    }
+
+    header .logo img {
+      max-width: 120px;
+    }
+
+    .content h1 {
+      font-size: 3.5rem;
+    }
+
+    .section-content {
+      font-size: 1.4rem;
+    }
+
+    #bird2 {
+      height: auto;
+      width: 1570px;
+      bottom: -710px;
+      left: -450px;
+    }
+  }
+
+  /* Cross icon for closing the panel */
+  .menu-icon.open::before {
+    content: "\2715";
+    /* Unicode for 'X' (cross) symbol */
+  }
+
+  .menu-icon::before {
+    content: "\2630";
+    /* Unicode for burger icon */
+  }
+}
+
+/* Navbar adjustments */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #283f52;
+  padding: 7px 20px 0px 7px;
+  box-shadow: 0 4px 10px #283f52;
+  height: 100px;
+}
+
+/* Navbar Logo */
+header .logo img {
+  background-image: url(../img/LogoBg.png);
+  background-size: 100px 100px;
+  max-width: 100px;
+  height: 100px;
+  z-index: 2000;
+}
+
+/* Burger Icon */
+header .menu-icon {
+  color: white;
+  font-size: 3rem;
+  cursor: pointer;
+  z-index: 2000;
+}
+
+/* Slide-in Panel */
+#nav-menu {
+  position: fixed;
+  right: -100%;
+  top: 0;
+  width: 300px;
+  height: 100vh;
+  background-color: #399ba3;
+  padding: 20px;
+  transition: right 0.5s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+#nav-menu.open {
+  right: 0;
+}
+
+#nav-menu ul {
+  list-style: none;
+  padding: 0;
+}
+
+#nav-menu ul li {
+  margin: 1px 0;
+}
+
+#nav-menu ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: color 0.3s;
+}
+
+#nav-menu ul li a:hover {
+  color: #fc3930;
+}
+
+/* Social Media Icons */
+.social-icons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  padding: 10px 0;
+}
+
+.social-icons a {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.social-icons img {
+  width: 30px;
+  height: 30px;
+}
+
+/* Other content styling */
+section {
+  padding: 20px 20px;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 500;
+}
+
+.content h1 {
+  font-family: 'Rozha One', serif;
+  font-size: 3rem;
+  color: #fc3930;
+  margin-top: 20px;
+  text-decoration: underline;
+}
+
+.rainbowline {
+  position: relative;
+  display: block;
+  text-align: center;
+  margin: 0 auto;
+  height: 4px;
+  /* Thickness of the underline */
+  width: 260px;
+  bottom: 18px;
+  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+}
+
+@media (min-width: 768px) {
+  .rainbowline {
+    width: 340px;
+    height: 6px;
+  }
+}
+
+.section-title {
+  font-size: 1.8rem;
+  color: #fc3930;
+  margin-top: 30px;
+}
+
+.title {
+  font-size: 1.5rem;
+  color: #fc3930;
+  margin-top: 30px;
+}
+
+.title2 {
+  font-size: 1.4rem;
+  color: #fc3930;
+  margin-top: 30px;
+}
+
+.section-content {
+  font-size: 1.2rem;
+  margin-top: 20px;
+  color: #444;
+  text-align: left;
+}
+
+footer {
+  background-color: #283f52;
+  color: #fff;
+  padding: 10px 0;
+  text-align: center;
+}
+
+footer ul {
+  list-style-type: none;
+  display: flex;
+  justify-content: center;
+}
+
+footer ul li {
+  margin: 0 10px;
+}
+
+footer ul li a img {
+  width: 34px;
+  height: 34px;
+}
+
+footer p {
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+/* Bird image styling */
+#bird {
+  display: block;
+  position: fixed;
+  bottom: -110px;
+  left: -110px;
+  width: 550px;
+  opacity: 0.4;
+  z-index: -1;
+  transition: transform 0.5s ease-out;
+}
+
+#bird2 {
+  display: none;
+}
+
+/* Responsive fixes for desktop view */
+@media (min-width: 768px) {
+  header {
+    padding: 10px 40px;
+  }
+
+  header .logo img {
+    max-width: 120px;
+  }
+
+  .content h1 {
+    font-size: 3.5rem;
+  }
+
+  .section-content {
+    font-size: 1.4rem;
+  }
+
+  #bird {
+    width: 750px;
+    bottom: -250px;
+    left: -5px;
+  }
+}
+
+/* Cross icon for closing the panel */
+.menu-icon.open::before {
+  content: "\2715";
+  /* Unicode for 'X' (cross) symbol */
+}
+
+.menu-icon::before {
+  content: "\2630";
+  /* Unicode for burger icon */
+}

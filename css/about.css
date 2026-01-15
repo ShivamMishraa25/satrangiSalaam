@@ -1,0 +1,223 @@
+:root {
+  --about-bg: #f7fbff;
+  --about-surface: #ffffff;
+  --about-text: #0f172a;
+  --about-muted: rgba(15, 23, 42, 0.72);
+  --about-border: rgba(15, 23, 42, 0.10);
+  --about-shadow: 0 18px 60px rgba(2, 6, 23, 0.10);
+  --about-radius: 18px;
+  --about-accent: #14b8a6;
+  --about-accent-2: #7c3aed;
+}
+
+.about-page {
+  font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--about-text);
+  background: radial-gradient(1200px 600px at 15% -10%, rgba(20, 184, 166, 0.20), transparent 60%),
+              radial-gradient(900px 500px at 90% 0%, rgba(124, 58, 237, 0.16), transparent 65%),
+              var(--about-bg);
+  padding-top: 92px;
+  /* padding-bottom: 40px; */
+}
+
+@media (max-width: 768px) {
+  .about-page {
+    padding-top: 60px;
+  }
+}
+
+@media (max-width: 364px) {
+  .about-page {
+    padding-top: 80px;
+  }
+}
+
+.about-container {
+  width: min(1100px, calc(100% - 28px));
+  margin: 0 auto;
+}
+
+.about-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 34px 0 26px;
+}
+
+.about-hero__bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(900px 450px at 20% 25%, rgba(20, 184, 166, 0.25), transparent 60%),
+    radial-gradient(800px 420px at 90% 30%, rgba(124, 58, 237, 0.22), transparent 65%);
+  filter: blur(0px);
+  pointer-events: none;
+}
+
+.about-hero__inner {
+  width: min(1100px, calc(100% - 28px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 18px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .about-hero__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.about-hero__content,
+.about-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--about-border);
+  border-radius: var(--about-radius);
+  box-shadow: var(--about-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.about-hero__content {
+  padding: 22px 22px;
+}
+
+.about-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(20, 184, 166, 0.12);
+  border: 1px solid rgba(20, 184, 166, 0.18);
+  color: #0f766e;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 8px 12px;
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+}
+
+.about-hero__title {
+  margin: 0 0 10px;
+  font-size: clamp(1.9rem, 2.4vw, 2.8rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.about-hero__lead {
+  margin: 0 0 16px;
+  font-size: 1.02rem;
+  line-height: 1.75;
+  color: var(--about-muted);
+}
+
+.about-hero__highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.about-chip {
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.88);
+  font-size: 0.95rem;
+}
+
+.about-card {
+  padding: 18px 18px;
+}
+
+.about-card__title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.about-card__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  color: rgba(15, 23, 42, 0.82);
+  line-height: 1.45;
+}
+
+.about-card__list strong {
+  color: rgba(15, 23, 42, 0.92);
+}
+
+.about-section {
+  padding: 18px 0;
+}
+
+.about-section--alt {
+  background: rgba(255, 255, 255, 0.55);
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.about-section__title {
+  margin: 0 0 10px;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+}
+
+.about-prose {
+  background: var(--about-surface);
+  border: 1px solid var(--about-border);
+  border-radius: var(--about-radius);
+  padding: 18px 18px;
+  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.06);
+}
+
+.about-prose p {
+  margin: 0 0 12px;
+  color: var(--about-muted);
+  line-height: 1.8;
+}
+
+.about-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.about-list {
+  margin: 10px 0 12px;
+  padding-left: 20px;
+  color: var(--about-muted);
+  line-height: 1.8;
+}
+
+.about-list li {
+  margin: 6px 0;
+}
+
+.about-quote {
+  margin: 14px 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px dashed rgba(20, 184, 166, 0.35);
+  background: rgba(20, 184, 166, 0.10);
+}
+
+.about-quote p {
+  margin: 0;
+  color: rgba(10, 80, 74, 0.95);
+  font-weight: 700;
+}
+
+.about-quote--highlight {
+  border: 1px solid rgba(124, 58, 237, 0.22);
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.about-quote--highlight p {
+  color: rgba(59, 20, 120, 0.90);
+}
+
+/* Keep included footer spacing consistent */
+.footer {
+  margin-top: 28px;
+}

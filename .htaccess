@@ -1,0 +1,25 @@
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME}.php -f
+# RewriteRule ^([^.]+)$ $1.php [L]
+
+# RewriteRule ^donate/?$ public/donate.php [L]
+# RewriteRule ^about/?$ public/aboutUs.php [L]
+
+
+Options -MultiViews
+RewriteEngine On
+
+# If your project is in a subfolder (e.g. /satrangisalaam on localhost)
+# RewriteBase helps avoid odd relative rewrite behavior.
+RewriteBase /satrangisalaam/
+
+# 1. Specific redirects to the 'public' folder
+RewriteRule ^donate/?$ public/donate.php [L]
+RewriteRule ^about/?$ public/about.php [L]
+
+# 2. General rule to hide .php for files in the current directory
+# This checks if the request is NOT a directory and NOT a file
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^.]+)$ $1.php [L]

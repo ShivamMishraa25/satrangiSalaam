@@ -190,6 +190,7 @@
     </main>
 
     <?php include "../includes/footer.php"; ?>
+    <script src="<?php echo BASE_URL; ?>js/shared-layout.js"></script>
     <script src="<?php echo BASE_URL; ?>js/about.js"></script>
 </body>
 </html>

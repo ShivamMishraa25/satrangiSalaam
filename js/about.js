@@ -1,19 +1,4 @@
-// Mobile Navigation Toggle
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
-
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
-
-// Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-menu a').forEach(link => {
-    link.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
-    });
-});
+// Mobile navigation behavior is handled by js/shared-layout.js
 
 // Language translation
 (function () {
@@ -229,6 +214,11 @@ document.querySelectorAll('.nav-menu a').forEach(link => {
     if (btn) btn.textContent = lang === 'hi' ? 'English' : 'हिंदी';
 
     document.body.classList.toggle('hindi', lang === 'hi');
+
+    // Shared nav title, nav links, and footer translations
+    if (window.SharedLayout && typeof window.SharedLayout.applySharedTranslations === 'function') {
+      window.SharedLayout.applySharedTranslations(lang === 'hi' ? 'hindi' : 'english');
+    }
   }
 
   // Expose for inline onclick in nav.php

@@ -1,19 +1,4 @@
-// Mobile Navigation Toggle
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
-
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navMenu.classList.toggle('active');
-});
-
-// Close mobile menu when clicking on a link
-document.querySelectorAll('.nav-menu a').forEach(link => {
-    link.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
-    });
-});
+// Mobile navigation behavior is handled by js/shared-layout.js
 
 // Language Translation
 let isHindi = false;
@@ -290,21 +275,13 @@ function toggleLanguage() {
     
     // Update body class for font changes
     document.body.classList.toggle('hindi', isHindi);
-    
-    // Update navigation title (FEATURE 1: Nav title translation)
-    const navTitle = document.getElementById('nav-title');
-    if (navTitle) {
-        navTitle.textContent = isHindi ? 'सतरंगी सलाम' : 'Satrangi Salaam';
+
+    // Shared nav title, nav links, and footer translations
+    if (window.SharedLayout && typeof window.SharedLayout.applySharedTranslations === 'function') {
+        window.SharedLayout.applySharedTranslations(lang);
     }
     
-    // Update navigation
-    const navLinks = document.querySelectorAll('.nav-menu a');
-    const navKeys = ['about', 'events', 'announcements', 'join', 'login', 'contact', 'donate'];
-    navLinks.forEach((link, index) => {
-        if (navKeys[index]) {
-            link.textContent = translations[lang].nav[navKeys[index]];
-        }
-    });
+    // Note: nav title + nav links are handled by SharedLayout.applySharedTranslations()
     
     // Update hero section
     const heroTitle = document.querySelector('.hero-title');
@@ -441,51 +418,7 @@ function toggleLanguage() {
     const mapTitle = document.querySelector('.map-section .section-header h2');
     if (mapTitle) mapTitle.textContent = translations[lang].map.title;
 
-    // Update footer section
-    const footerOrgName = document.querySelector('.footer-section h3');
-    const footerDescription = document.querySelector('.footer-section p');
-    const footerHeaders = document.querySelectorAll('.footer-section h4');
-    const footerLinks = document.querySelectorAll('.footer-section ul li a');
-    const footerBottom = document.querySelectorAll('.footer-bottom p');
-
-    if (footerOrgName) footerOrgName.textContent = translations[lang].footer.orgName;
-    if (footerDescription) footerDescription.textContent = translations[lang].footer.description;
-    
-    // Update footer headers to match home.php structure
-    if (footerHeaders[0]) footerHeaders[0].textContent = translations[lang].footer.quickLinks;
-    if (footerHeaders[1]) footerHeaders[1].textContent = translations[lang].footer.programs;
-    if (footerHeaders[2]) footerHeaders[2].textContent = translations[lang].footer.contacts;
-    
-    // Update footer links to match the new structure in home.php
-    const footerLinkTranslations = [
-        // Quick Links (5 items)
-        translations[lang].footer.article,
-        translations[lang].footer.gallery,
-        translations[lang].footer.careers,
-        translations[lang].footer.postholders,
-        translations[lang].footer.other,
-        // Programs (5 items)
-        translations[lang].footer.inTheNews,
-        translations[lang].footer.collab,
-        translations[lang].footer.impact,
-        translations[lang].footer.affiliates,
-        translations[lang].footer.reach,
-        // Contacts (5 items)
-        translations[lang].footer.whatsapp,
-        translations[lang].footer.teligram,
-        translations[lang].footer.wordpress,
-        translations[lang].footer.email,
-        translations[lang].footer.dev
-    ];
-    
-    footerLinks.forEach((link, index) => {
-        if (footerLinkTranslations[index]) {
-            link.textContent = footerLinkTranslations[index];
-        }
-    });
-    
-    if (footerBottom[0]) footerBottom[0].textContent = translations[lang].footer.copyright;
-    if (footerBottom[1]) footerBottom[1].textContent = translations[lang].footer.registered;
+    // Note: footer is handled by SharedLayout.applySharedTranslations()
 
     // Update latest announcement section
     const latestAnnouncementTitle = document.querySelector('#latest-announcement-title');
@@ -567,13 +500,7 @@ document.querySelectorAll('section').forEach(section => {
     observer.observe(section);
 });
 
-// Close mobile menu when clicking outside
-document.addEventListener('click', (e) => {
-    if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
-        hamburger.classList.remove('active');
-        navMenu.classList.remove('active');
-    }
-});
+// Close mobile menu when clicking outside is handled by js/shared-layout.js
 
 // Prevent zoom on double tap for mobile
 let lastTouchEnd = 0;

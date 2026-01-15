@@ -402,8 +402,6 @@ $events_result = $conn->query($events_sql);
     include "includes/footer.php"
     ?>
 
-    <script src="js/shared-nav.js"></script>
-    <script src="js/shared-i18n.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

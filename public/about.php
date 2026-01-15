@@ -190,8 +190,6 @@
     </main>
 
     <?php include "../includes/footer.php"; ?>
-    <script src="<?php echo BASE_URL; ?>js/shared-nav.js"></script>
-    <script src="<?php echo BASE_URL; ?>js/shared-i18n.js"></script>
     <script src="<?php echo BASE_URL; ?>js/about.js"></script>
 </body>
 </html>

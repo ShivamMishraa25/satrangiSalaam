@@ -1,4 +1,19 @@
-// Mobile navigation behavior moved to js/shared-nav.js
+// Mobile Navigation Toggle
+const hamburger = document.querySelector('.hamburger');
+const navMenu = document.querySelector('.nav-menu');
+
+hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    navMenu.classList.toggle('active');
+});
+
+// Close mobile menu when clicking on a link
+document.querySelectorAll('.nav-menu a').forEach(link => {
+    link.addEventListener('click', () => {
+        hamburger.classList.remove('active');
+        navMenu.classList.remove('active');
+    });
+});
 
 // Language Translation
 let isHindi = false;
@@ -275,13 +290,21 @@ function toggleLanguage() {
     
     // Update body class for font changes
     document.body.classList.toggle('hindi', isHindi);
-
-    // Apply shared nav/footer translations (centralized)
-    applyShared(isHindi ? 'hi' : 'en');
     
-    // Nav title + links are handled by SharedI18n.apply()
+    // Update navigation title (FEATURE 1: Nav title translation)
+    const navTitle = document.getElementById('nav-title');
+    if (navTitle) {
+        navTitle.textContent = isHindi ? 'सतरंगी सलाम' : 'Satrangi Salaam';
+    }
     
-    // Note: nav link text is handled by SharedI18n.apply()
+    // Update navigation
+    const navLinks = document.querySelectorAll('.nav-menu a');
+    const navKeys = ['about', 'events', 'announcements', 'join', 'login', 'contact', 'donate'];
+    navLinks.forEach((link, index) => {
+        if (navKeys[index]) {
+            link.textContent = translations[lang].nav[navKeys[index]];
+        }
+    });
     
     // Update hero section
     const heroTitle = document.querySelector('.hero-title');
@@ -480,12 +503,6 @@ function toggleLanguage() {
     }
 }
 
-function applyShared(lang) {
-    if (window.SharedI18n && typeof window.SharedI18n.apply === 'function') {
-        window.SharedI18n.apply(lang);
-    }
-}
-
 // Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
@@ -550,7 +567,13 @@ document.querySelectorAll('section').forEach(section => {
     observer.observe(section);
 });
 
-// Close mobile menu when clicking outside is handled by js/shared-nav.js
+// Close mobile menu when clicking outside
+document.addEventListener('click', (e) => {
+    if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
+        hamburger.classList.remove('active');
+        navMenu.classList.remove('active');
+    }
+});
 
 // Prevent zoom on double tap for mobile
 let lastTouchEnd = 0;

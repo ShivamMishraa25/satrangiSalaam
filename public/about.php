@@ -1,8 +1,10 @@
 <?php
     include "../config.php";
+    $lang = $_GET['lang'] ?? ($_COOKIE['lang'] ?? 'en');
+    $lang = ($lang === 'hi' || $lang === 'hindi') ? 'hi' : 'en';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo $lang === 'hi' ? 'hi' : 'en'; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,8 +27,13 @@
 
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/style.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/about.css">
+
+        <script>
+            // Make language available even before JS bundles run
+            window.__INITIAL_LANG__ = <?php echo json_encode($lang); ?>;
+        </script>
 </head>
-<body>
+<body class="<?php echo $lang === 'hi' ? 'hindi' : ''; ?>">
     <?php include "../includes/nav.php"; ?>
 
     <main class="about-page">

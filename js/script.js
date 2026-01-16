@@ -2,6 +2,176 @@
 
 // Language Translation
 let isHindi = false;
+
+// Initialize language from querystring or cookie (persists across pages)
+(function () {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const qLang = params.get('lang');
+        const cookieLang = (document.cookie.match(/(?:^|;\s*)lang=([^;]+)/) || [])[1];
+        const lang = (qLang || (cookieLang ? decodeURIComponent(cookieLang) : '') || '').toLowerCase();
+        isHindi = (lang === 'hi' || lang === 'hindi');
+    } catch (e) {
+        // default stays English
+    }
+})();
+
+function applyInitialLanguage() {
+    const langKey = isHindi ? 'hindi' : 'english';
+    const translateBtn = document.querySelector('.translate-btn');
+    if (translateBtn) translateBtn.innerHTML = isHindi ? 'English' : 'हिंदी';
+    document.body.classList.toggle('hindi', isHindi);
+
+    if (window.SharedLayout) {
+        if (typeof window.SharedLayout.persistLangParam === 'function') {
+            window.SharedLayout.persistLangParam(isHindi ? 'hi' : 'en');
+        }
+        if (typeof window.SharedLayout.applySharedTranslations === 'function') {
+            window.SharedLayout.applySharedTranslations(langKey);
+        }
+        if (typeof window.SharedLayout.updateNavLinkLang === 'function') {
+            window.SharedLayout.updateNavLinkLang(isHindi ? 'hi' : 'en');
+        }
+    }
+
+    // Apply full page translations (same logic as toggleLanguage) without requiring a click.
+    // This covers sections that render later in the page (announcements/events/gallery/map/etc.).
+    const lang = langKey;
+
+    // Update hero section
+    const heroTitle = document.querySelector('.hero-title');
+    const heroSubtitle = document.querySelector('.hero-subtitle');
+    const heroLocation = document.querySelector('.hero-location');
+    const heroBtns = document.querySelectorAll('.hero-buttons .btn');
+    if (heroTitle) heroTitle.textContent = translations[lang].hero.title;
+    if (heroSubtitle) heroSubtitle.textContent = translations[lang].hero.subtitle;
+    if (heroLocation) heroLocation.textContent = translations[lang].hero.location;
+    if (heroBtns[0]) heroBtns[0].textContent = translations[lang].hero.donateBtn;
+    if (heroBtns[1]) heroBtns[1].textContent = translations[lang].hero.learnBtn;
+
+    // Update about section
+    const aboutTitle = document.querySelector('#about .section-header h2');
+    const aboutSubtitle = document.querySelector('#about .section-header p');
+    const visionTitle = document.querySelector('.about-text h3');
+    const visionText = document.querySelector('.about-text > p');
+    const missionPoints = document.querySelectorAll('.point h4');
+    const missionTexts = document.querySelectorAll('.point p');
+    if (aboutTitle) aboutTitle.textContent = translations[lang].about.title;
+    if (aboutSubtitle) aboutSubtitle.textContent = translations[lang].about.subtitle;
+    if (visionTitle) visionTitle.textContent = translations[lang].about.visionTitle;
+    if (visionText) visionText.textContent = translations[lang].about.visionText;
+    if (missionPoints[0]) missionPoints[0].textContent = translations[lang].about.communityTitle;
+    if (missionPoints[1]) missionPoints[1].textContent = translations[lang].about.educationTitle;
+    if (missionPoints[2]) missionPoints[2].textContent = translations[lang].about.healthcareTitle;
+    if (missionTexts[0]) missionTexts[0].textContent = translations[lang].about.communityText;
+    if (missionTexts[1]) missionTexts[1].textContent = translations[lang].about.educationText;
+    if (missionTexts[2]) missionTexts[2].textContent = translations[lang].about.healthcareText;
+
+    // Update donate section
+    const donateTitle = document.querySelector('#donate h2');
+    const donateSubtitle = document.querySelector('#donate > .container > .donate-content > p');
+    const donateOptions = document.querySelectorAll('.donate-card p');
+    const customInput = document.querySelector('#customAmount');
+    const customBtn = document.querySelector('.custom-amount .btn');
+    if (donateTitle) donateTitle.textContent = translations[lang].donate.title;
+    if (donateSubtitle) donateSubtitle.textContent = translations[lang].donate.subtitle;
+    if (donateOptions[0]) donateOptions[0].textContent = translations[lang].donate.option1;
+    if (donateOptions[1]) donateOptions[1].textContent = translations[lang].donate.option2;
+    if (donateOptions[2]) donateOptions[2].textContent = translations[lang].donate.option3;
+    if (customInput) customInput.placeholder = translations[lang].donate.customPlaceholder;
+    if (customBtn) customBtn.textContent = translations[lang].donate.customBtn;
+
+    // Update announcements section
+    const announcementsTitle = document.querySelector('#announcements .section-header h2');
+    const announcementsSubtitle = document.querySelector('#announcements .section-header p');
+    const announcementTitles = document.querySelectorAll('.announcement-content h3');
+    const announcementTexts = document.querySelectorAll('.announcement-content p');
+    const readMoreLinks = document.querySelectorAll('.read-more');
+    if (announcementsTitle) announcementsTitle.textContent = translations[lang].announcements.title;
+    if (announcementsSubtitle) announcementsSubtitle.textContent = translations[lang].announcements.subtitle;
+    if (announcementTitles[0]) announcementTitles[0].textContent = translations[lang].announcements.medicalCamp;
+    if (announcementTitles[1]) announcementTitles[1].textContent = translations[lang].announcements.scholarshipProgram;
+    if (announcementTitles[2]) announcementTitles[2].textContent = translations[lang].announcements.unityRally;
+    if (announcementTexts[0]) announcementTexts[0].textContent = translations[lang].announcements.medicalCampText;
+    if (announcementTexts[1]) announcementTexts[1].textContent = translations[lang].announcements.scholarshipText;
+    if (announcementTexts[2]) announcementTexts[2].textContent = translations[lang].announcements.unityRallyText;
+    readMoreLinks.forEach((link) => {
+        if (link) link.textContent = translations[lang].announcements.readMore;
+    });
+
+    // Update events section
+    const eventTitle = document.querySelector('#events .section-header h2');
+    const eventSubtitle = document.querySelector('#events .section-header p');
+    if (eventTitle) eventTitle.textContent = translations[lang].events.title;
+    if (eventSubtitle) eventSubtitle.textContent = translations[lang].events.subtitle;
+    const eventBtns = document.querySelectorAll('.event-card .btn');
+    eventBtns.forEach((btn) => {
+        if (btn) btn.textContent = translations[lang].events.readMoreBtn;
+    });
+
+    // Update join us section
+    const joinTitle = document.querySelector('#join .join-content h2');
+    const joinSubtitle = document.querySelector('#join .join-content p');
+    const joinCardTitles = document.querySelectorAll('.join-card h3');
+    const joinCardTexts = document.querySelectorAll('.join-card p');
+    const joinCardBtns = document.querySelectorAll('.join-card .btn');
+    if (joinTitle) joinTitle.textContent = translations[lang].joinUs.title;
+    if (joinSubtitle) joinSubtitle.textContent = translations[lang].joinUs.subtitle;
+    if (joinCardTitles[0]) joinCardTitles[0].textContent = translations[lang].joinUs.memberTitle;
+    if (joinCardTitles[1]) joinCardTitles[1].textContent = translations[lang].joinUs.volunteerTitle;
+    if (joinCardTitles[2]) joinCardTitles[2].textContent = translations[lang].joinUs.partnerTitle;
+    if (joinCardTexts[0]) joinCardTexts[0].textContent = translations[lang].joinUs.memberText;
+    if (joinCardTexts[1]) joinCardTexts[1].textContent = translations[lang].joinUs.volunteerText;
+    if (joinCardTexts[2]) joinCardTexts[2].textContent = translations[lang].joinUs.partnerText;
+    if (joinCardBtns[0]) joinCardBtns[0].textContent = translations[lang].joinUs.memberBtn;
+    if (joinCardBtns[1]) joinCardBtns[1].textContent = translations[lang].joinUs.volunteerBtn;
+    if (joinCardBtns[2]) joinCardBtns[2].textContent = translations[lang].joinUs.partnerBtn;
+
+    // Update contact section
+    const contactTitle = document.querySelector('.contact-info h2');
+    const contactSubtitle = document.querySelector('.contact-info > p');
+    const contactHeaders = document.querySelectorAll('.contact-item h4');
+    const contactTexts = document.querySelectorAll('.contact-item p');
+    const formInputs = document.querySelectorAll('.contact-form input, .contact-form textarea, .contact-form select');
+    const selectOptions = document.querySelectorAll('.contact-form option');
+    const sendBtn = document.querySelector('.contact-form .btn');
+    if (contactTitle) contactTitle.textContent = translations[lang].contact.title;
+    if (contactSubtitle) contactSubtitle.textContent = translations[lang].contact.subtitle;
+    if (contactHeaders[0]) contactHeaders[0].textContent = translations[lang].contact.address;
+    if (contactHeaders[1]) contactHeaders[1].textContent = translations[lang].contact.phone;
+    if (contactHeaders[2]) contactHeaders[2].textContent = translations[lang].contact.email;
+    if (contactTexts[0]) contactTexts[0].innerHTML = translations[lang].contact.addressText;
+    if (contactTexts[1]) contactTexts[1].innerHTML = translations[lang].contact.phoneText;
+    if (contactTexts[2]) contactTexts[2].innerHTML = translations[lang].contact.emailText;
+    if (formInputs[0]) formInputs[0].placeholder = translations[lang].contact.namePlaceholder;
+    if (formInputs[1]) formInputs[1].placeholder = translations[lang].contact.emailPlaceholder;
+    if (formInputs[2]) formInputs[2].placeholder = translations[lang].contact.phonePlaceholder;
+    if (formInputs[4]) formInputs[4].placeholder = translations[lang].contact.messagePlaceholder;
+    if (selectOptions[0]) selectOptions[0].textContent = translations[lang].contact.subjectPlaceholder;
+    if (selectOptions[1]) selectOptions[1].textContent = translations[lang].contact.generalInquiry;
+    if (selectOptions[2]) selectOptions[2].textContent = translations[lang].contact.volunteerOpp;
+    if (selectOptions[3]) selectOptions[3].textContent = translations[lang].contact.donation;
+    if (selectOptions[4]) selectOptions[4].textContent = translations[lang].contact.partnership;
+    if (sendBtn) sendBtn.textContent = translations[lang].contact.sendBtn;
+
+    // Update map + latest announcement + gallery
+    const mapTitle = document.querySelector('.map-section .section-header h2');
+    if (mapTitle) mapTitle.textContent = translations[lang].map.title;
+    const latestAnnouncementTitle = document.querySelector('#latest-announcement-title');
+    if (latestAnnouncementTitle) latestAnnouncementTitle.textContent = translations[lang].latestAnnouncement.title;
+    const galleryTitle = document.querySelector('#gallery-title');
+    const gallerySubtitle = document.querySelector('.gallery-preview .section-header p');
+    const galleryBtn = document.querySelector('.gallery-action .btn');
+    if (galleryTitle) galleryTitle.textContent = translations[lang].gallery.title;
+    if (gallerySubtitle) gallerySubtitle.textContent = translations[lang].gallery.subtitle;
+    if (galleryBtn) galleryBtn.innerHTML = `<i class="fas fa-images"></i> ${translations[lang].gallery.viewGallery}`;
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyInitialLanguage);
+} else {
+    applyInitialLanguage();
+}
 const translations = {
     english: {
         nav: {
@@ -268,6 +438,7 @@ const translations = {
 function toggleLanguage() {
     isHindi = !isHindi;
     const lang = isHindi ? 'hindi' : 'english';
+    const langParam = isHindi ? 'hi' : 'en';
     const translateBtn = document.querySelector('.translate-btn');
     
     // Update translate button
@@ -275,6 +446,22 @@ function toggleLanguage() {
     
     // Update body class for font changes
     document.body.classList.toggle('hindi', isHindi);
+
+    // Persist across pages (cookie + querystring)
+    try {
+        document.cookie = 'lang=' + encodeURIComponent(langParam) + '; path=/; SameSite=Lax';
+    } catch (e) {}
+
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('lang', langParam);
+        window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
+
+    // Update nav links so clicks keep the new language
+    if (window.SharedLayout && typeof window.SharedLayout.updateNavLinkLang === 'function') {
+        window.SharedLayout.updateNavLinkLang(langParam);
+    }
 
     // Shared nav title, nav links, and footer translations
     if (window.SharedLayout && typeof window.SharedLayout.applySharedTranslations === 'function') {

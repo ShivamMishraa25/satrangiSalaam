@@ -196,9 +196,46 @@
 
   let isHindi = false;
 
+  function getInitialLang() {
+    try {
+      if (typeof window.__INITIAL_LANG__ === 'string' && window.__INITIAL_LANG__.length) {
+        const preset = window.__INITIAL_LANG__.toLowerCase();
+        return (preset === 'hi' || preset === 'hindi') ? 'hi' : 'en';
+      }
+      const params = new URLSearchParams(window.location.search);
+      const qLang = (params.get('lang') || '').toLowerCase();
+      const cookieLangMatch = document.cookie.match(/(?:^|;\s*)lang=([^;]+)/);
+      const cookieLang = cookieLangMatch ? decodeURIComponent(cookieLangMatch[1]) : '';
+      const lang = (qLang || cookieLang || '').toLowerCase();
+      return (lang === 'hi' || lang === 'hindi') ? 'hi' : 'en';
+    } catch (e) {
+      return 'en';
+    }
+  }
+
+  function persistLang(lang) {
+    const langParam = lang === 'hi' ? 'hi' : 'en';
+    try {
+      document.cookie = 'lang=' + encodeURIComponent(langParam) + '; path=/; SameSite=Lax';
+    } catch (e) {}
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', langParam);
+      window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
+
+    // Update nav links so clicks keep the same language
+    if (window.SharedLayout && typeof window.SharedLayout.updateNavLinkLang === 'function') {
+      window.SharedLayout.updateNavLinkLang(langParam);
+    }
+  }
+
   function applyLanguage(lang) {
     const dict = translations[lang];
     if (!dict) return;
+
+    persistLang(lang);
 
     document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
 
@@ -228,5 +265,15 @@
   };
 
   // Initial state
-  applyLanguage('en');
+  function init() {
+    const initialLang = getInitialLang();
+    isHindi = initialLang === 'hi';
+    applyLanguage(initialLang);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();

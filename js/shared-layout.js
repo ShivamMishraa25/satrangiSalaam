@@ -125,6 +125,68 @@
     el.textContent = value;
   }
 
+  function getCurrentLangParam() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const qLang = (params.get('lang') || '').toLowerCase();
+      const cookieLangMatch = document.cookie.match(/(?:^|;\s*)lang=([^;]+)/);
+      const cookieLang = cookieLangMatch ? decodeURIComponent(cookieLangMatch[1]) : '';
+      const lang = (qLang || cookieLang || '').toLowerCase();
+      return (lang === 'hi' || lang === 'hindi') ? 'hi' : 'en';
+    } catch (e) {
+      return 'en';
+    }
+  }
+
+  function persistLangParam(langParam) {
+    const normalized = (langParam === 'hi' || langParam === 'hindi') ? 'hi' : 'en';
+    try {
+      document.cookie = 'lang=' + encodeURIComponent(normalized) + '; path=/; SameSite=Lax';
+    } catch (e) {}
+
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', normalized);
+      window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
+
+    return normalized;
+  }
+
+  function updateNavLinkLang(langParam) {
+    const normalized = (langParam === 'hi' || langParam === 'hindi') ? 'hi' : 'en';
+
+    // Update brand/logo link
+    const brandLink = document.querySelector('.nav-logo a');
+    if (brandLink) {
+      try {
+        const href = brandLink.getAttribute('href') || '';
+        if (href && !href.startsWith('#')) {
+          const url = new URL(href, window.location.origin);
+          url.searchParams.set('lang', normalized);
+          brandLink.setAttribute('href', url.pathname + url.search + url.hash);
+        }
+      } catch (e) {
+        // Ignore malformed
+      }
+    }
+
+    const links = document.querySelectorAll('.nav-menu a');
+    links.forEach((a) => {
+      try {
+        // Skip hash-only links like #contact
+        const href = a.getAttribute('href') || '';
+        if (href.startsWith('#') || href === '') return;
+
+        const url = new URL(href, window.location.origin);
+        url.searchParams.set('lang', normalized);
+        a.setAttribute('href', url.pathname + url.search + url.hash);
+      } catch (e) {
+        // Ignore malformed URLs
+      }
+    });
+  }
+
   function applySharedTranslations(langKey) {
     const dict = sharedTranslations[langKey];
     if (!dict) return;
@@ -141,6 +203,9 @@
       if (!key) return;
       setText(link, dict.nav[key]);
     });
+
+    // Ensure nav links preserve selected language.
+    updateNavLinkLang(langKey === 'hindi' ? 'hi' : 'en');
 
     // Footer
     const footerOrgName = document.querySelector('.footer-section h3');
@@ -189,7 +254,10 @@
   // Expose for inline onclick="toggleLanguage()" in nav.php
   window.SharedLayout = {
     initMobileNav,
-    applySharedTranslations
+    applySharedTranslations,
+    getCurrentLangParam,
+    persistLangParam,
+    updateNavLinkLang
   };
 
   if (document.readyState === 'loading') {

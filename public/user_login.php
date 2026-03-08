@@ -63,6 +63,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 background-color: green;
                 color:white;
             }
+
+            .login-actions {
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+                margin-top: 6px;
+            }
+
+            .forgot-link {
+                font-size: 14px;
+                text-decoration: underline;
+            }
+
+            .pw-field {
+                position: relative;
+                display: inline-block;
+            }
+
+            .pw-field input {
+                padding-right: 42px;
+            }
+
+            .pw-toggle {
+                position: absolute;
+                top: 50%;
+                right: 8px;
+                transform: translateY(-50%);
+                width: 30px;
+                height: 30px;
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                color: rgba(0,0,0,0.75);
+            }
+
+            .pw-toggle:hover {
+                color: rgba(0,0,0,1);
+            }
+
+            .pw-toggle svg {
+                width: 18px;
+                height: 18px;
+                display: block;
+            }
             </style>
     </head>
     <body>
@@ -107,8 +155,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2 class="section-title">Member Login</h2>
     <form method="POST">
         <label>Email: <input type="email" name="email" required></label><br>
-        <label>Password: <input type="password" name="password" required></label><br>
-        <button type="submit">Login</button>
+        <label>Password:
+            <span class="pw-field">
+                <input id="login-password" type="password" name="password" required>
+                <button type="button" class="pw-toggle" id="toggle-login-password" aria-label="Show password" title="Show password">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M2 12C3.8 7.5 7.3 5 12 5C16.7 5 20.2 7.5 22 12C20.2 16.5 16.7 19 12 19C7.3 19 3.8 16.5 2 12Z" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M12 15.2C10.2 15.2 8.8 13.8 8.8 12C8.8 10.2 10.2 8.8 12 8.8C13.8 8.8 15.2 10.2 15.2 12C15.2 13.8 13.8 15.2 12 15.2Z" stroke="currentColor" stroke-width="1.8"/>
+                    </svg>
+                </button>
+            </span>
+        </label><br>
+        <div class="login-actions">
+            <button type="submit">Login</button>
+            <a href="forgot_password" class="forgot-link">Forgot password?</a>
+        </div>
     </form>
     <br><br>
     <p>यदि आपने फॉर्म नहीं भरा है तो आप निचे दिए गये बटन पे क्लिक करके भर सकते हैं|</p>
@@ -130,5 +191,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </footer>
         <script type="text/javascript" src="../js/pages.js"></script>
+        <script>
+            (function() {
+                var input = document.getElementById('login-password');
+                var btn = document.getElementById('toggle-login-password');
+                if (!input || !btn) return;
+
+                btn.addEventListener('click', function() {
+                    var showing = input.type === 'text';
+                    input.type = showing ? 'password' : 'text';
+                    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+                    btn.title = showing ? 'Show password' : 'Hide password';
+                });
+            })();
+        </script>
     </body>
 </html>

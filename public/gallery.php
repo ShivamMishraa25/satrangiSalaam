@@ -1,175 +1,217 @@
 <?php
-    include '../includes/db.php'; // Include database connection
+include '../config.php';
+
+$lang = $_GET['lang'] ?? ($_COOKIE['lang'] ?? 'en');
+$lang = ($lang === 'hi' || $lang === 'hindi') ? 'hi' : 'en';
+
+$rootDir = dirname(__DIR__);
+$staticDir = $rootDir . '/img/gallery';
+$uploadDir = $rootDir . '/uploads/gallery';
+
+function buildGalleryItems($dirPath, $publicPrefix, $source)
+{
+    $items = [];
+
+    if (!is_dir($dirPath)) {
+        return $items;
+    }
+
+    $files = scandir($dirPath);
+    if ($files === false) {
+        return $items;
+    }
+
+    foreach ($files as $file) {
+        if ($file === '.' || $file === '..') {
+            continue;
+        }
+
+        $fullPath = $dirPath . '/' . $file;
+        if (!is_file($fullPath)) {
+            continue;
+        }
+
+        if (!preg_match('/\.(jpg|jpeg|png|webp|gif)$/i', $file)) {
+            continue;
+        }
+
+        $filenameWithoutExt = pathinfo($file, PATHINFO_FILENAME);
+        $cleanName = trim(preg_replace('/[_-]+/', ' ', $filenameWithoutExt));
+        if ($cleanName === '') {
+            $cleanName = 'Photo';
+        }
+
+        $fileTimestamp = filemtime($fullPath);
+        if ($fileTimestamp === false) {
+            $fileTimestamp = time();
+        }
+
+        $fullSrc = BASE_URL . ltrim($publicPrefix . '/' . rawurlencode($file), '/');
+        $thumbSrc = BASE_URL . 'public/gallery_image.php?source=' . rawurlencode($source) . '&file=' . rawurlencode($file) . '&w=720&q=72';
+
+        $items[] = [
+            'src' => $fullSrc,
+            'thumbSrc' => $thumbSrc,
+            'title' => ucwords($cleanName),
+            'source' => $source,
+            'uploadedAt' => date('F d, Y', $fileTimestamp),
+            'sortKey' => $fileTimestamp,
+        ];
+    }
+
+    usort($items, function ($a, $b) {
+        return $b['sortKey'] <=> $a['sortKey'];
+    });
+
+    return $items;
+}
+
+$uploadedItems = buildGalleryItems($uploadDir, 'uploads/gallery', 'recent');
+$archiveItems = buildGalleryItems($staticDir, 'img/gallery', 'archive');
+
+$allItems = [];
+$seen = [];
+
+foreach (array_merge($uploadedItems, $archiveItems) as $item) {
+    if (isset($seen[$item['src']])) {
+        continue;
+    }
+    $seen[$item['src']] = true;
+    $allItems[] = $item;
+}
+
+$totalCount = count($allItems);
+$recentCount = count($uploadedItems);
+$archiveCount = count($archiveItems);
 ?>
 <!DOCTYPE html>
-<html lang="hi">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Gallery</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Rozha+One&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="../css/pages.css">
-        <link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1562008429602585"
-     crossorigin="anonymous"></script>
+<html lang="<?php echo $lang === 'hi' ? 'hi' : 'en'; ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
+    <meta property="og:site_name" content="Satrangi Salaam">
+    <meta property="og:title" content="Gallery | All India Satrangi Salaam Association">
+    <meta property="og:description" content="Explore activity moments, outreach drives, and community impact in the AISSA gallery.">
+    <meta property="og:type" content="website">
 
-        <style>
-       .gallery {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .gallery img {
-            width: calc(50% - 10px);
-            height: auto;
-        }
-        @media (min-width: 768px) {
-            .gallery img {
-                width: calc(33.33% - 10px);
-            }
-        }
-    </style>
-    </head>
-    <body>
-        <header>
-            <!-- Logo or homepage anchor -->
-            <a href="../" class="logo">
-            <img src="../img/satrangiSalaamLogo.png"
-                alt="satrangi Salaam Logo">
-            </a>
-            <!-- Burger Icon -->
-            <div class="menu-icon" id="menu-icon"></div>
-            <!-- Slide-in Menu -->
-            <nav id="nav-menu">
-            <ul>
-                <li><a href="../about">हमारे बारे में</a></li>
-                <li><a href="announcements">सूचनाएं (अपडेट्स)</a></li>
-                <li><a href="gallery">गैलरी</a></li>   
-                <li><a href="events">हमारे कार्यक्रम</a></li>
-                <li><a href="joinUs">हम से जुड़े (सदस्यता)</a></li>
-                <li><a href="../donate">सहयोग करें (donate)</a></li>
-                <li><a href="careers">करियर (पेशेवर) विकास के अवसर</a></li>
-                <li><a href="officers">हमारे पदाधिकारी</a></li>
-                <li><a href="writeArticle">आर्टिकल लिखें</a></li>
-                <li><a href="inTheNews">खबरों में हम</a></li>               
-                <li><a href="collaboratorsAndSponsors">हमारे सहयोगी</a></li>
-                <li><a href="impact">बदलाव (असर)</a></li>               
-                <li><a href="affiliates">हमारे स्वायत्त व अधीनस्थ संस्थाएं</a></li>
-                <li><a href="reach">प्रदेश व विभिन्न स्तर पर हम</a></li>                                
-                <li><a href="other">अन्य</a></li>
-            </ul>
-            <div class="social-icons">
-                <a href="https://youtube.com/@satrangisalaam/"><img src="https://cdn1.iconfinder.com/data/icons/logotypes/32/youtube-512.png"></a>
-                <a href="https://www.instagram.com/satrangisalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a>
-                <a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a>
-                <a href="mailto:satrangisalamss@gmail.com"><img src="https://cdn4.iconfinder.com/data/icons/logos-brands-in-colors/48/google-gmail-512.png" alt="Email"></a>
-                <a href="https://x.com/SatrangiSalamSS"><img src="https://cdn2.iconfinder.com/data/icons/threads-by-instagram/24/x-logo-twitter-new-brand-contained-512.png" alt="Twitter"></a>
-        </header>
-        <!-- Bird Image for animation -->
-        <img id="bird" src="../img/bird.png" alt="Flying Bird">
-        <img id="bird2" src="../img/bird2.png" alt="flying bird">
-          <section class="content">
-          <h1 class="section-title">गैलरी</h1>
-    <!-- Gallery -->
-    <div class="gallery
-        
-    <?php
-        // Fetch uploaded gallery images
-        $gallery_query = "SELECT * FROM gallery ORDER BY uploaded_at DESC";
-        $gallery_result = $conn->query($gallery_query);
+    <link rel="icon" type="image/x-icon" href="<?php echo BASE_URL; ?>favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo BASE_URL; ?>apple-touch-icon.png">
 
-        if ($gallery_result->num_rows > 0) {
-            while ($row = $gallery_result->fetch_assoc()) {
-                $image_path = "../uploads/gallery/" . $row['image_path'];
-                echo '<img src="' . $image_path . '" alt="Gallery Image">';
-            }
-        } else {
-            echo '<p>No images found in the gallery.</p>';
-        }
-    ?>
-    
-<img src="../img/gallery/1.jpg" alt="Gallery Image 1">
-<img src="../img/gallery/2.jpg" alt="Gallery Image 2">
-<img src="../img/gallery/3.jpg" alt="Gallery Image 3">
-<img src="../img/gallery/4.jpg" alt="Gallery Image 4">
-<img src="../img/gallery/5.jpg" alt="Gallery Image 5">
-<img src="../img/gallery/6.jpg" alt="Gallery Image 6">
-<img src="../img/gallery/7.jpg" alt="Gallery Image 7">
-<img src="../img/gallery/8.jpg" alt="Gallery Image 8">
-<img src="../img/gallery/9.jpg" alt="Gallery Image 9">
-<img src="../img/gallery/10.jpg" alt="Gallery Image 10">
-<img src="../img/gallery/11.jpg" alt="Gallery Image 11">
-<img src="../img/gallery/12.jpg" alt="Gallery Image 12">
-<img src="../img/gallery/13.jpg" alt="Gallery Image 13">
-<img src="../img/gallery/14.jpg" alt="Gallery Image 14">
-<img src="../img/gallery/15.jpg" alt="Gallery Image 15">
-<img src="../img/gallery/16.jpg" alt="Gallery Image 16">
-<img src="../img/gallery/17.jpg" alt="Gallery Image 17">
-<img src="../img/gallery/18.jpg" alt="Gallery Image 18">
-<img src="../img/gallery/19.jpg" alt="Gallery Image 19">
-<img src="../img/gallery/20.jpg" alt="Gallery Image 20">
-<img src="../img/gallery/21.jpg" alt="Gallery Image 21">
-<img src="../img/gallery/22.jpg" alt="Gallery Image 22">
-<img src="../img/gallery/23.jpg" alt="Gallery Image 23">
-<img src="../img/gallery/24.jpg" alt="Gallery Image 24">
-<img src="../img/gallery/25.jpg" alt="Gallery Image 25">
-<img src="../img/gallery/26.jpg" alt="Gallery Image 26">
-<img src="../img/gallery/27.jpg" alt="Gallery Image 27">
-<img src="../img/gallery/28.jpg" alt="Gallery Image 28">
-<img src="../img/gallery/29.jpg" alt="Gallery Image 29">
-<img src="../img/gallery/30.jpg" alt="Gallery Image 30">
-<img src="../img/gallery/31.jpg" alt="Gallery Image 31">
-<img src="../img/gallery/32.jpg" alt="Gallery Image 32">
-<img src="../img/gallery/33.jpg" alt="Gallery Image 33">
-<img src="../img/gallery/34.jpg" alt="Gallery Image 34">
-<img src="../img/gallery/35.jpg" alt="Gallery Image 35">
-<img src="../img/gallery/36.jpg" alt="Gallery Image 36">
-<img src="../img/gallery/37.jpg" alt="Gallery Image 37">
-<img src="../img/gallery/38.jpg" alt="Gallery Image 38">
-<img src="../img/gallery/39.jpg" alt="Gallery Image 39">
-<img src="../img/gallery/40.jpg" alt="Gallery Image 40">
-<img src="../img/gallery/41.jpg" alt="Gallery Image 41">
-<img src="../img/gallery/42.jpg" alt="Gallery Image 42">
-<img src="../img/gallery/43.jpg" alt="Gallery Image 43">
-<img src="../img/gallery/44.jpg" alt="Gallery Image 44">
-<img src="../img/gallery/45.jpg" alt="Gallery Image 45">
-<img src="../img/gallery/46.jpg" alt="Gallery Image 46">
-<img src="../img/gallery/47.jpg" alt="Gallery Image 47">
-<img src="../img/gallery/48.jpg" alt="Gallery Image 48">
-<img src="../img/gallery/49.jpg" alt="Gallery Image 49">
-<img src="../img/gallery/50.jpg" alt="Gallery Image 50">
-<img src="../img/gallery/51.jpg" alt="Gallery Image 51">
-<img src="../img/gallery/52.jpg" alt="Gallery Image 52">
-<img src="../img/gallery/53.jpg" alt="Gallery Image 53">
-<img src="../img/gallery/54.jpg" alt="Gallery Image 54">
-<img src="../img/gallery/55.jpg" alt="Gallery Image 55">
-<img src="../img/gallery/56.jpg" alt="Gallery Image 56">
+    <title>Gallery | AISSA</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-    </div>
-          </section>
-        <footer>
-            <ul>
-                <li><a href="https://youtube.com/@satrangisalaam/"><img src="https://cdn1.iconfinder.com/data/icons/logotypes/32/youtube-512.png"></a></li>
-                <li><a href="https://www.instagram.com/satrangisalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a></li>
-                <li><a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a></li>
-                <li><a href="https://satrangisalaam.wordpress.com/"><img src="https://cdn4.iconfinder.com/data/icons/iconsimple-logotypes/512/wordpress-512.png" alt="WordPress"></a></li>
-                <li><a href="https://chat.whatsapp.com/Jifh0MGROxAJQD4bueRFN0"><img src="https://cdn3.iconfinder.com/data/icons/2018-social-media-logotypes/1000/2018_social_media_popular_app_logo-whatsapp-512.png"></a></li>
-                <li><a href="https://t.me/SatrangiSalam"><img src="https://cdn4.iconfinder.com/data/icons/logos-and-brands/512/335_Telegram_logo-512.png"></a></li>
-                <li><a href="https://x.com/SatrangiSalamSS"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Twitter_colored_svg-256.png" alt="Twitter"></a></li>
-            </ul>
-            <div class="darkmode">
-              <span>switch to dark/light mode</span>
-            <button id="toggle-button" class="toggle-btn"></button>
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/gallery.css">
+
+    <script>
+        window.__INITIAL_LANG__ = <?php echo json_encode($lang); ?>;
+    </script>
+</head>
+<body class="<?php echo $lang === 'hi' ? 'hindi' : ''; ?>">
+    <?php include '../includes/nav.php'; ?>
+
+    <main class="gallery-page">
+        <section class="gallery-hero">
+            <div class="gallery-hero__bg" aria-hidden="true"></div>
+            <div class="gallery-container gallery-hero__inner">
+                <div class="gallery-hero__content">
+                    <p class="gallery-hero__badge" data-i18n="badge">AISSA Moments</p>
+                    <h1 class="gallery-hero__title" data-i18n="title">Gallery</h1>
+                    <p class="gallery-hero__lead" data-i18n="lead">A living archive of community actions, awareness drives, collaborations, and impact stories across India.</p>
+
+                    <div class="gallery-stats" aria-label="Gallery statistics">
+                        <div class="gallery-stat">
+                            <span class="gallery-stat__value"><?php echo $totalCount; ?></span>
+                            <span class="gallery-stat__label" data-i18n="statTotal">Total Photos</span>
+                        </div>
+                        <div class="gallery-stat">
+                            <span class="gallery-stat__value"><?php echo $recentCount; ?></span>
+                            <span class="gallery-stat__label" data-i18n="statRecent">Recent Uploads</span>
+                        </div>
+                        <div class="gallery-stat">
+                            <span class="gallery-stat__value"><?php echo $archiveCount; ?></span>
+                            <span class="gallery-stat__label" data-i18n="statArchive">Archive Photos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="gallery-panel" aria-label="Filter panel">
+                    <h2 class="gallery-panel__title" data-i18n="panelTitle">Browse By</h2>
+                    <div class="gallery-filters" role="tablist" aria-label="Gallery filters">
+                        <button class="gallery-filter is-active" type="button" data-filter="all" data-i18n="filterAll">All</button>
+                        <button class="gallery-filter" type="button" data-filter="recent" data-i18n="filterRecent">Recent</button>
+                        <button class="gallery-filter" type="button" data-filter="archive" data-i18n="filterArchive">Archive</button>
+                    </div>
+                    <p class="gallery-panel__hint" data-i18n="panelHint">Click any photo to view in full screen. Use keyboard arrows for navigation.</p>
+                </aside>
             </div>
-        </footer>
-        <script type="text/javascript" src="../js/pages.js"></script>
-    </body>
+        </section>
+
+        <section class="gallery-section">
+            <div class="gallery-container">
+                <?php if ($totalCount > 0): ?>
+                    <div class="gallery-grid" id="galleryGrid">
+                        <?php foreach ($allItems as $index => $item): ?>
+                            <article class="gallery-card reveal" data-source="<?php echo htmlspecialchars($item['source']); ?>">
+                                <button
+                                    class="gallery-card__media"
+                                    type="button"
+                                    data-lightbox-index="<?php echo $index; ?>"
+                                    data-full-src="<?php echo htmlspecialchars($item['src']); ?>"
+                                    data-uploaded-at="<?php echo htmlspecialchars($item['uploadedAt']); ?>"
+                                    aria-label="Open image <?php echo htmlspecialchars($item['title']); ?>"
+                                >
+                                    <img
+                                        src="<?php echo htmlspecialchars($item['thumbSrc']); ?>"
+                                        alt="<?php echo htmlspecialchars($item['title']); ?>"
+                                        loading="lazy"
+                                        decoding="async"
+                                    >
+                                    <span class="gallery-card__chip" data-i18n="<?php echo $item['source'] === 'recent' ? 'chipRecent' : 'chipArchive'; ?>">
+                                        <?php echo $item['source'] === 'recent' ? 'Recent Upload' : 'Archive'; ?>
+                                    </span>
+                                </button>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="gallery-empty">
+                        <h2 data-i18n="emptyTitle">No Photos Yet</h2>
+                        <p data-i18n="emptyText">Gallery images will appear here as soon as new uploads are available.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </section>
+    </main>
+
+    <div class="gallery-lightbox" id="galleryLightbox" aria-hidden="true">
+        <a class="gallery-lightbox__download" id="lightboxDownload" href="#" download aria-label="Download image">
+            <i class="fas fa-download"></i>
+        </a>
+        <button class="gallery-lightbox__close" id="lightboxClose" type="button" aria-label="Close lightbox">
+            <i class="fas fa-times"></i>
+        </button>
+        <button class="gallery-lightbox__nav gallery-lightbox__nav--prev" id="lightboxPrev" type="button" aria-label="Previous image">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <figure class="gallery-lightbox__figure">
+            <img id="lightboxImage" src="" alt="Expanded gallery photo">
+            <figcaption id="lightboxCaption"></figcaption>
+        </figure>
+        <button class="gallery-lightbox__nav gallery-lightbox__nav--next" id="lightboxNext" type="button" aria-label="Next image">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <?php include '../includes/footer.php'; ?>
+
+    <script src="<?php echo BASE_URL; ?>js/shared-layout.js"></script>
+    <script src="<?php echo BASE_URL; ?>js/gallery.js"></script>
+</body>
 </html>

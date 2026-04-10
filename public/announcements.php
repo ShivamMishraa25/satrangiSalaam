@@ -1,209 +1,236 @@
 <?php
+include '../config.php';
 include '../includes/db.php';
+
+$lang = $_GET['lang'] ?? ($_COOKIE['lang'] ?? 'en');
+$lang = ($lang === 'hi' || $lang === 'hindi') ? 'hi' : 'en';
 
 $sql = "SELECT * FROM announcements ORDER BY id DESC";
 $result = $conn->query($sql);
+
+$hindiMonths = ['जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+
+function normalizeAnnouncementMediaPath($path)
+{
+    $clean = trim((string) $path);
+    $clean = preg_replace('#^\.{1,2}/+#', '', $clean);
+    $clean = ltrim(str_replace('\\', '/', $clean), '/');
+    return $clean;
+}
+
+function announcementThumbUrl($path)
+{
+    if (preg_match('~^https?://~i', $path)) {
+        return $path;
+    }
+
+    $clean = normalizeAnnouncementMediaPath($path);
+    if ($clean === '') {
+        return '';
+    }
+
+    return BASE_URL . 'public/event_media.php?path=' . rawurlencode($clean) . '&w=560&q=62';
+}
+
+function announcementFullUrl($path)
+{
+    if (preg_match('~^https?://~i', $path)) {
+        return $path;
+    }
+
+    $clean = normalizeAnnouncementMediaPath($path);
+    if ($clean === '') {
+        return '';
+    }
+
+    return BASE_URL . $clean;
+}
+
+function formatAnnouncementDateLocalized($dateValue, $lang, $hindiMonths)
+{
+    $date = DateTime::createFromFormat('Y-m-d H:i:s', (string) $dateValue);
+    if (!$date) {
+        return (string) $dateValue;
+    }
+
+    if ($lang === 'hi') {
+        $monthIndex = ((int) $date->format('n')) - 1;
+        $month = $hindiMonths[$monthIndex] ?? $date->format('F');
+        return $date->format('d') . ' ' . $month . ' ' . $date->format('Y');
+    }
+
+    return $date->format('F d, Y');
+}
+
+$allAnnouncements = [];
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $allAnnouncements[] = [
+            'title' => $row['title'] ?? 'Announcement',
+            'date' => formatAnnouncementDateLocalized($row['created_at'] ?? '', $lang, $hindiMonths),
+            'content' => $row['content'] ?? '',
+            'images' => array_filter(array_map('trim', explode(',', (string) ($row['images'] ?? '')))),
+        ];
+    }
+}
+
+$legacyNotices = [
+    [
+        'title' => '11, September, Wednesday.',
+        'date' => '11 September',
+        'content' => 'अखिलेश तिवारी व नितिन शुक्ला का त्यागपत्र मंजूर कर लिया गया है। ये पुनः संस्था में आ सकते है लेकिन पद ग्रहण ये संस्था में 6 महीने रहने के बाद ही कर पाएंगे।\n\nविजयलक्ष्मी जी का त्यागपत्र मंजूर कर लिया गया है। इन्हें संस्था से तीन साल के लिए प्रतिबंधित किया गया है।',
+        'images' => [],
+    ],
+    [
+        'title' => '12, September, Thursday',
+        'date' => '12 September',
+        'content' => 'अब केवल 10 रुपया वाले सदस्य या फिर 30 रुपये वाले वरिष्ठ सदस्यों की नियुक्ति ही डायरेक्ट किया जाएगा, बाकी किसी भी नियुक्ति के लिए मुख्य ट्रस्टी, Board Of Trustees व विशेष सभा की अनुमति आवश्यक होगी...',
+        'images' => [],
+    ],
+    [
+        'title' => '21, September, Saturday',
+        'date' => '21 September',
+        'content' => '*जो लोग बिना सूचना के लगातार किसी भी इवेंट में नहीं आ रहे है, जब तक वे मुझे व दीप को (दोनों को) संतोषजनक जवाब नहीं देते है; तब तक के लिए उनके सभी अधिकार, पद मान्यता सब कुछ सस्पेंड रहेगा; तब तक वे संस्था के मात्र साधारण सदस्य होंगे। जवाब देने के लिए मात्र 7 दिनों का समय है।*',
+        'images' => [],
+    ],
+    [
+        'title' => '24, September, Tuesday',
+        'date' => '24 September',
+        'content' => '*आकाश (सक्सेना) ने अपना त्यागपत्र दिया था* और वो फिर 9 दिनों के बाद सभी ग्रुप से हट चुके हैं... अतः *उनका त्यागपत्र मंजूर किया था।*',
+        'images' => [],
+    ],
+    [
+        'title' => '8, October, Tuesday',
+        'date' => '8 October',
+        'content' => 'NGO के किसी भी सदस्य या पदाधिकारी को किसी भी प्रकार की सैलरी देने का वादा नहीं किया गया है :-\n\nNGO का मतलब होता है Non-Government Organization और AISSA का रजिस्ट्रेशन अभी इसी साल अगस्त में हुआ है।\n\nहम बस आपके काम के लिए उचित मान-सम्मान व क्रेडिट दे सकते हैं, जो कि हम देते ही हैं।\n\nआप को अपने विभिन्न टैलेंट को दिखाने का बेहतरीन प्लेटफार्म उपलब्ध करवा सकते हैं, किंतु अभी हम किसी को भी उनके सेवाओं के लिए भुगतान नहीं कर सकते हैं।\n\nहम कब भुगतान करने की स्थिति में होंगे, हमें यह भी नहीं पता है।\n\nहम में से किसी ने भी किसी को यह नहीं कहा है कि आपको सैलरी दी जाएगी और आशा है कि इंटरनेट के माध्यम से आप सभी ने जरूर पता किया होगा कि NGO का मतलब क्या होता है।\n\nऔर रही बात मेरी तो मेरा खुद का पैसा खर्च होता है - कपड़े, दान कलेक्शन, ऑय कैम्प और हर जगह का किराया, छोटे-छोटे पेमेंट।\n\nबाकी एक्टिव सदस्य भी खुद का ही पैसा खर्च करते हैं।\n\nइसीलिए हम लोग सब कुछ पहले ही साफ-साफ बता देते हैं। पारदर्शी व्यवस्था एकदम।\n\nअगर हमें गवर्नमेंट प्रोजेक्ट मिलता है या फिर कोई बड़ा स्पॉन्सरशिप मिलता है, तो फिर भुगतान किया जा सकेगा लेकिन केवल उन्ही को, जो आज बिना किसी भुगतान के NGO के लिए लगे हुए हैं।\n\nकृपया सैलरी की बात करके शर्मिंदा ना करें।',
+        'images' => [],
+    ],
+];
+
+$allAnnouncements = array_merge($allAnnouncements, $legacyNotices);
 ?>
 <!DOCTYPE html>
-<html lang="hi">
-
+<html lang="<?php echo $lang === 'hi' ? 'hi' : 'en'; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
     <meta property="og:site_name" content="Satrangi Salaam">
-    <meta property="og:title" content="Announcements">
-    <meta property="og:description" content="Satrangi Salaam's Latest News and Updates">
+    <meta property="og:title" content="Announcements | All India Satrangi Salaam Association">
+    <meta property="og:description" content="Latest AISSA announcements, notices, and official updates.">
+    <meta property="og:type" content="website">
 
-    <meta property="og:image" itemprop="image" content="https://i.ibb.co/nz0bLWN/Satrangi-Salaam-300.jpg">
-    <meta property="og:type" content="website" />
-    <meta property="og:image:type" content="image/jpg">
+    <link rel="icon" type="image/x-icon" href="<?php echo BASE_URL; ?>favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo BASE_URL; ?>apple-touch-icon.png">
 
-    <meta property="og:image:width" content="300">
-    <meta property="og:image:height" content="300">
+    <title>Announcements | AISSA</title>
 
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-
-    <!--  <meta property="og:url" content="http://satrangisalaam.in">  -->
-    <title>Announcements</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rozha+One&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/pages.css">
-    <link rel="stylesheet" href="../css/announcements.css">
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1562008429602585"
-     crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>css/announcements.css">
+
+    <script>
+        window.__INITIAL_LANG__ = <?php echo json_encode($lang); ?>;
+    </script>
 </head>
+<body class="<?php echo $lang === 'hi' ? 'hindi' : ''; ?>">
+    <?php include '../includes/nav.php'; ?>
 
-<body>
-    <header>
-        <!-- Logo or homepage anchor -->
-        <a href="../" class="logo"><img src="../img/satrangiSalaamLogo.png" alt="satrangi Salaam Logo"></a>
-        <!-- Burger Icon -->
-        <div class="menu-icon" id="menu-icon"></div>
-        <!-- Slide-in Menu -->
-        <nav id="nav-menu">
-            <ul>
-                <li><a href="../about">हमारे बारे में</a></li>
-                <li><a href="announcements">सूचनाएं (अपडेट्स)</a></li>
-                <li><a href="gallery">गैलरी</a></li>   
-                <li><a href="events">हमारे कार्यक्रम</a></li>
-                <li><a href="joinUs">हम से जुड़े (सदस्यता)</a></li>
-                <li><a href="../donate">सहयोग करें (donate)</a></li>
-                <li><a href="careers">करियर (पेशेवर) विकास के अवसर</a></li>
-                <li><a href="officers">हमारे पदाधिकारी</a></li>
-                <li><a href="writeArticle">आर्टिकल लिखें</a></li>
-                <li><a href="inTheNews">खबरों में हम</a></li>               
-                <li><a href="collaboratorsAndSponsors">हमारे सहयोगी</a></li>
-                <li><a href="impact">बदलाव (असर)</a></li>               
-                <li><a href="affiliates">हमारे स्वायत्त व अधीनस्थ संस्थाएं</a></li>
-                <li><a href="reach">प्रदेश व विभिन्न स्तर पर हम</a></li>                                
-                <li><a href="other">अन्य</a></li>
-            </ul>
-            <div class="social-icons">
-                <a href="https://youtube.com/@satrangisalaam/"><img src="https://cdn1.iconfinder.com/data/icons/logotypes/32/youtube-512.png"></a>
-                <a href="https://www.instagram.com/satrangisalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png" alt="Instagram"></a>
-                <a href="https://www.facebook.com/SatrangiSalaam/"><img src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png" alt="Facebook"></a>
-                <a href="mailto:satrangisalamss@gmail.com"><img src="https://cdn4.iconfinder.com/data/icons/logos-brands-in-colors/48/google-gmail-512.png" alt="Email"></a>
-                <a href="https://x.com/SatrangiSalamSS"><img src="https://cdn2.iconfinder.com/data/icons/threads-by-instagram/24/x-logo-twitter-new-brand-contained-512.png" alt="Twitter"></a>
+    <main class="bulletin-page">
+        <section class="bulletin-hero">
+            <div class="bulletin-shell">
+                <div class="bulletin-hero__panel">
+                    <p class="bulletin-hero__eyebrow" data-i18n="eyebrow">Official Bulletin</p>
+                    <h1 data-i18n="title">Announcements</h1>
+                    <p data-i18n="lead">Decisions, notices, and communication updates presented in one clear stream.</p>
+                </div>
             </div>
-        </nav>
-    </header>
-    <!-- Bird Image for animation -->
-    <img id="bird" src="../img/bird.png" alt="Flying Bird">
-    <img id="bird2" src="../img/bird2.png" alt="flying bird">
-    <section class="content">
-        <h1>सूचनाएं</h1>
-        
-<?php if ($result->num_rows > 0): ?>
-    <?php while($row = $result->fetch_assoc()): ?>
-        <article>
-            <h2><?= htmlspecialchars($row['title']) ?></h2>
-            <p><?= nl2br(htmlspecialchars($row['content'])) ?></p>
-            <!-- Display Images -->
-            <figure>
-                <?php
-                $images = explode(',', $row['images']);
-                foreach ($images as $image) {
-                    if (!empty($image)) {
-                        echo "<img src='" . htmlspecialchars($image) . "' alt='Announcement Image'>";
-                    }
-                }
-                ?>
-            </figure>
-            <?php
-            $date = DateTime::createFromFormat('Y-m-d H:i:s', $row['created_at']);
-            $months_hindi = ['जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
-            $month_index = (int)$date->format('n') - 1;
-            $formatted_date = $date->format('d') . ' ' . $months_hindi[$month_index] . ' ' . $date->format('Y');
-            ?>
-            <strong><?= htmlspecialchars($formatted_date) ?></strong>
-            </article>
-    <?php endwhile; ?>
-<?php else: ?>
-    <p>No announcements found.</p>
-<?php endif; ?>
+        </section>
 
-<?php $conn->close(); ?>
-        <div class="left">
-            <article>
-                <h2>11, September, Wednesday.</h2>
-                    अखिलेश तिवारी व नितिन शुक्ला का त्यागपत्र मंजूर कर लिया गया है।<br>
-                    ये पुनः संस्था में आ सकते है लेकिन पद ग्रहण ये संस्था में 6 महीने रहने के बाद ही कर पाएंगे।</p>
-    
-                <br>
-    
-                <p>विजयलक्ष्मी जी का त्यागपत्र मंजूर कर लिया गया है।<br>
-                    इन्हें संस्था से तीन साल के लिए प्रतिबंधित किया गया है।</p>
-            </article>
-            <article>
-                <h2>12, September, Thursday</h2>
-                <p>
-                    अब केवल 10 रुपया वाले सदस्य या फिर 30 रुपये वाले वरिष्ठ सदस्यों की नियुक्ति ही डायरेक्ट किया जाएगा, बाकी
-                    किसी भी नियुक्ति के लिए मुख्य ट्रस्टी, Board Of Trustees व विशेष सभा की अनुमति आवश्यक होगी...</p>
-            </article>
-            <article>
-                <h2>21, September, Saturday</h2>
-                <p>
-                    <span class="highlight">*जो लोग बिना सूचना के लगातार किसी भी इवेंट में नहीं आ रहे है, जब तक वे मुझे व
-                        दीप को (दोनों को) संतोषजनक जवाब नहीं देते है;<br>
-                        तब तक के लिए उनके सभी अधिकार, पद मान्यता सब कुछ सस्पेंड रहेगा; तब तक वे संस्था के मात्र साधारण सदस्य
-                        होंगे।<br>
-                        जवाब देने के लिए मात्र 7 दिनों का समय है।*</span>
-                </p>
-            </article>
-            <article>
-                <h2>24, September, Tuesday</h2>
-                <p>
-                <span class="highlight">*आकाश (सक्सेना) ने अपना त्यागपत्र दिया था*</span> और वो फिर 9 दिनों के बाद सभी
-                ग्रुप से हट चुके हैं...<br>
-                अतः <span class="highlight">*उनका त्यागपत्र मंजूर किया था।*</span>
-            </p>
-            </article>
-            <article>
-                <h2>8, October, Tuesday</h2>
-                <p>
-                    NGO के किसी भी सदस्य या पदाधिकारी को किसी भी प्रकार की सैलरी देने का वादा नहीं किया गया है :-<br><br>
-    
-                    NGO का मतलब होता है Non-Government Organization और AISSA का रजिस्ट्रेशन अभी इसी साल अगस्त में हुआ
-                    है।<br><br>
-    
-                    हम बस आपके काम के लिए उचित मान-सम्मान व क्रेडिट दे सकते हैं, जो कि हम देते ही हैं।<br><br>
-    
-                    आप को अपने विभिन्न टैलेंट को दिखाने का बेहतरीन प्लेटफार्म उपलब्ध करवा सकते हैं, किंतु अभी हम किसी को भी
-                    उनके सेवाओं के लिए भुगतान नहीं कर सकते हैं।<br><br>
-    
-                    हम कब भुगतान करने की स्थिति में होंगे, हमें यह भी नहीं पता है।<br><br>
-    
-                    हम में से किसी ने भी किसी को यह नहीं कहा है कि आपको सैलरी दी जाएगी और आशा है कि इंटरनेट के माध्यम से आप
-                    सभी ने जरूर पता किया होगा कि NGO का मतलब क्या होता है।<br><br>
-    
-                    और रही बात मेरी तो मेरा खुद का पैसा खर्च होता है - कपड़े, दान कलेक्शन, ऑय कैम्प और हर जगह का किराया,
-                    छोटे-छोटे पेमेंट।<br><br>
-    
-                    बाकी एक्टिव सदस्य भी खुद का ही पैसा खर्च करते हैं।<br><br>
-    
-                    इसीलिए हम लोग सब कुछ पहले ही साफ-साफ बता देते हैं। पारदर्शी व्यवस्था एकदम।<br><br>
-    
-                    अगर हमें गवर्नमेंट प्रोजेक्ट मिलता है या फिर कोई बड़ा स्पॉन्सरशिप मिलता है, तो फिर भुगतान किया जा सकेगा
-                    लेकिन केवल उन्ही को, जो आज बिना किसी भुगतान के NGO के लिए लगे हुए हैं।<br><br>
-    
-                    कृपया सैलरी की बात करके शर्मिंदा ना करें।</p>
-            </article>
-            
+        <section class="bulletin-stream-wrap">
+            <div class="bulletin-shell bulletin-stream">
+                <?php if (!empty($allAnnouncements)): ?>
+                    <?php foreach ($allAnnouncements as $index => $entry): ?>
+                        <?php
+                        $title = htmlspecialchars($entry['title'] ?? 'Announcement');
+                        $date = htmlspecialchars($entry['date'] ?? '');
+                        $content = (string) ($entry['content'] ?? '');
+                        $images = $entry['images'] ?? [];
+
+                        $chipLabel = '';
+                        if ($index === 0) {
+                            $chipLabel = 'Latest';
+                        } elseif ($index > 0 && $index <= 4) {
+                            $chipLabel = 'Recent';
+                        }
+                        ?>
+                        <article class="bulletin-card reveal">
+                            <header class="bulletin-card__header">
+                                <p class="bulletin-card__date"><?php echo $date; ?></p>
+                                <?php if ($chipLabel !== ''): ?>
+                                    <span class="bulletin-chip"><?php echo $chipLabel; ?></span>
+                                <?php endif; ?>
+                            </header>
+                            <h2><?php echo $title; ?></h2>
+
+                            <?php if ($content !== ''): ?>
+                                <p class="bulletin-card__content"><?php echo nl2br(htmlspecialchars($content)); ?></p>
+                            <?php endif; ?>
+
+                            <?php if (!empty($images)): ?>
+                                <div class="bulletin-gallery" data-announcement-date="<?php echo $date; ?>">
+                                    <?php foreach ($images as $image): ?>
+                                        <?php
+                                        $image = trim((string) $image);
+                                        if ($image === '') {
+                                            continue;
+                                        }
+                                        $thumb = announcementThumbUrl($image);
+                                        $full = announcementFullUrl($image);
+                                        if ($thumb === '' || $full === '') {
+                                            continue;
+                                        }
+                                        ?>
+                                        <button class="bulletin-photo" type="button" aria-label="Open announcement image">
+                                            <img src="<?php echo htmlspecialchars($thumb); ?>" data-full-src="<?php echo htmlspecialchars($full); ?>" alt="Announcement Image" loading="lazy" decoding="async">
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </article>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p class="bulletin-empty is-visible" data-i18n="noAnnouncements">No announcements available.</p>
+                <?php endif; ?>
+            </div>
+        </section>
+    </main>
+
+    <div class="bulletin-lightbox" id="bulletinLightbox" aria-hidden="true">
+        <div class="bulletin-lightbox__top">
+            <span id="bulletinLightboxMeta"></span>
+            <div class="bulletin-lightbox__actions">
+                <a id="bulletinDownload" href="#" download aria-label="Download image"><i class="fas fa-download"></i></a>
+                <button id="bulletinClose" type="button" aria-label="Close"><i class="fas fa-times"></i></button>
+            </div>
         </div>
-        <hr>
-    </section>
-    <footer>
-        <ul>
-            <li><a href="https://youtube.com/@satrangisalaam/"><img
-                        src="https://cdn1.iconfinder.com/data/icons/logotypes/32/youtube-512.png"></a></li>
-            <li><a href="https://www.instagram.com/satrangisalaam/"><img
-                        src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Instagram_colored_svg_1-1024.png"
-                        alt="Instagram"></a></li>
-            <li><a href="https://www.facebook.com/SatrangiSalaam/"><img
-                        src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Facebook_colored_svg_copy-1024.png"
-                        alt="Facebook"></a></li>
-            <li><a href="https://satrangisalaam.wordpress.com/"><img
-                        src="https://cdn4.iconfinder.com/data/icons/iconsimple-logotypes/512/wordpress-512.png"
-                        alt="WordPress"></a></li>
-            <li><a href="https://chat.whatsapp.com/Jifh0MGROxAJQD4bueRFN0"><img
-                        src="https://cdn3.iconfinder.com/data/icons/2018-social-media-logotypes/1000/2018_social_media_popular_app_logo-whatsapp-512.png"></a>
-            </li>
-            <li><a href="https://t.me/SatrangiSalam"><img
-                        src="https://cdn4.iconfinder.com/data/icons/logos-and-brands/512/335_Telegram_logo-512.png"></a>
-            </li>
-            <li><a href="https://x.com/SatrangiSalamSS/"><img
-                        src="https://cdn2.iconfinder.com/data/icons/social-media-2285/512/1_Twitter_colored_svg-256.png"
-                        alt="Twitter"></a></li>
-        </ul>
-        <div class="darkmode">
-            <span>switch to dark/light mode</span>
-            <button id="toggle-button" class="toggle-btn"></button>
-        </div>
-    </footer>
-    <script type="text/javascript" src="../js/pages.js"></script>
+        <button id="bulletinPrev" class="bulletin-lightbox__nav bulletin-lightbox__nav--prev" type="button" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
+        <figure class="bulletin-lightbox__figure">
+            <img id="bulletinImage" src="" alt="Expanded announcement image">
+            <figcaption id="bulletinCaption"></figcaption>
+        </figure>
+        <button id="bulletinNext" class="bulletin-lightbox__nav bulletin-lightbox__nav--next" type="button" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <?php include '../includes/footer.php'; ?>
+
+    <script src="<?php echo BASE_URL; ?>js/shared-layout.js"></script>
+    <script src="<?php echo BASE_URL; ?>js/announcements.js"></script>
 </body>
-
 </html>
+<?php $conn->close(); ?>

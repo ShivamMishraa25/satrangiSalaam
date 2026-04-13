@@ -42,6 +42,41 @@ if (isset($_POST['upload_gallery_images'])) {
         echo "<p>Error: Unable to upload images.</p>";
     }
 }
+
+// Handle Gallery Image Delete
+if (isset($_POST['delete_gallery_images'])) {
+    $selected_images = isset($_POST['selected_images']) && is_array($_POST['selected_images']) ? $_POST['selected_images'] : [];
+
+    if (!empty($selected_images)) {
+        $ids = array_map('intval', $selected_images);
+        $ids = array_filter($ids, function ($id) {
+            return $id > 0;
+        });
+
+        if (!empty($ids)) {
+            $id_list = implode(',', $ids);
+            $fetch_query = "SELECT id, image_path FROM gallery WHERE id IN ($id_list)";
+            $fetch_result = mysqli_query($conn, $fetch_query);
+
+            if ($fetch_result && mysqli_num_rows($fetch_result) > 0) {
+                while ($img = mysqli_fetch_assoc($fetch_result)) {
+                    $file_path = "../uploads/gallery/" . $img['image_path'];
+                    if (is_file($file_path)) {
+                        unlink($file_path);
+                    }
+                }
+
+                $delete_query = "DELETE FROM gallery WHERE id IN ($id_list)";
+                mysqli_query($conn, $delete_query);
+            }
+        }
+
+        header("Location: moderator.php");
+        exit();
+    }
+}
+
+$gallery_images_result = mysqli_query($conn, "SELECT id, image_path FROM gallery ORDER BY id DESC");
 ?>
 <!DOCTYPE html>
 <html lang="hi">
@@ -213,7 +248,7 @@ if (isset($_POST['upload_gallery_images'])) {
             }
 
             // Handle approve or dismiss actions
-            if ($_SERVER["REQUEST_METHOD"] == "POST") {
+            if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['approve2']) || isset($_POST['dismiss2']))) {
             $article_id = mysqli_real_escape_string($conn, $_POST['article_id']);
 
             if (isset($_POST['approve2'])) {
@@ -344,6 +379,23 @@ if (isset($_POST['upload_gallery_images'])) {
                 <label for="gallery_images">Select Images:</label><br>
                 <input type="file" name="gallery_images[]" id="gallery_images" multiple required><br><br>
                 <button type="submit" name="upload_gallery_images">Upload Images</button>
+            </form>
+
+            <br>
+            <h2 class="section-title">Delete Gallery Images</h2>
+            <form action="moderator.php" method="POST">
+                <?php if ($gallery_images_result && mysqli_num_rows($gallery_images_result) > 0): ?>
+                    <?php while ($gallery_image = mysqli_fetch_assoc($gallery_images_result)): ?>
+                        <label style="display:inline-block; margin:8px; text-align:center;">
+                            <input type="checkbox" name="selected_images[]" value="<?php echo (int)$gallery_image['id']; ?>"><br>
+                            <img src="../uploads/gallery/<?php echo rawurlencode($gallery_image['image_path']); ?>" alt="Gallery image" style="width:120px; height:120px; object-fit:cover; border:1px solid #ccc;">
+                        </label>
+                    <?php endwhile; ?>
+                    <br>
+                    <button type="submit" name="delete_gallery_images">Delete Selected Images</button>
+                <?php else: ?>
+                    <p>No gallery images found.</p>
+                <?php endif; ?>
             </form>
 
             <a href="logout.php">Logout</a>

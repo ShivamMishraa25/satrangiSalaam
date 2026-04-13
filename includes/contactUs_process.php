@@ -16,21 +16,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $subject = isset($_POST["subject"]) ? htmlspecialchars($_POST["subject"]) : NULL;
     $message = isset($_POST["message"]) ? htmlspecialchars($_POST["message"]) : NULL;
 
-    // Check if the table has subject and message columns
-    $columns_query = "SHOW COLUMNS FROM contactUs LIKE 'subject'";
+    // Detect optional columns independently to keep inserts compatible across schema versions.
+    $columns_query = "SHOW COLUMNS FROM contactUs WHERE Field IN ('subject', 'message')";
     $columns_result = $conn->query($columns_query);
-    $has_subject_column = $columns_result->num_rows > 0;
+    $has_subject_column = false;
+    $has_message_column = false;
+    if ($columns_result) {
+        while ($column = $columns_result->fetch_assoc()) {
+            if ($column['Field'] === 'subject') {
+                $has_subject_column = true;
+            }
+            if ($column['Field'] === 'message') {
+                $has_message_column = true;
+            }
+        }
+    }
 
-    // Insert into database based on table structure
+    // Insert into database based on available table columns.
     try {
-        if ($has_subject_column) {
-            // New table structure with subject and message columns
+        if ($has_subject_column && $has_message_column) {
             $stmt = $conn->prepare("INSERT INTO contactUs (name, email, phone, subject, message) VALUES (?, ?, ?, ?, ?)");
             $stmt->bind_param("sssss", $name, $email, $phone, $subject, $message);
+        } elseif ($has_message_column) {
+            // Keep saving message even if subject column is missing.
+            $stmt = $conn->prepare("INSERT INTO contactUs (name, email, phone, message) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $name, $email, $phone, $message);
+        } elseif ($has_subject_column) {
+            $stmt = $conn->prepare("INSERT INTO contactUs (name, email, phone, subject) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $name, $email, $phone, $subject);
         } else {
-            // Old table structure with only name, email, phone
             $stmt = $conn->prepare("INSERT INTO contactUs (name, email, phone) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $name, $email, $phone);
+        }
+
+        if (!$stmt) {
+            throw new \Exception("Database prepare failed: " . $conn->error);
         }
         
         $stmt->execute();
@@ -38,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         // Database insertion successful
         $db_success = true;
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         $db_success = false;
         $db_error = $e->getMessage();
     }
@@ -48,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email_error = '';
     
     // Check if email credentials file exists
-    $email_credentials_file = '../safe/emailPasswordAnnouncement.php';
+    $email_credentials_file = '../../Safe/emailPasswordAnnouncement.php';
     if (file_exists($email_credentials_file)) {
         try {
             $email_credentials = include $email_credentials_file;
@@ -153,7 +173,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     
                     " . (!$email_sent ? "<p class='warning'>⚠️ Email notification failed, but your message was recorded. You can also reach us directly at +91 94554 39320 or +91 87653 72798</p>" : "") . "
                     
-                    <a href='../home' class='btn'>← Back to Home</a>
+                    <a href='../' class='btn'>← Back to Home</a>
                 </div>
             </body>
             </html>";

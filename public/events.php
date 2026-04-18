@@ -131,16 +131,28 @@ function formatEventDateLocalized($dateValue, $lang, $hindiMonths)
                 <?php if ($result && $result->num_rows > 0): ?>
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <?php $formattedDate = formatEventDateLocalized($row['event_date'] ?? '', $lang, $hindiMonths); ?>
+                        <?php
+                        $eventNameEn = trim((string) ($row['event_name'] ?? ''));
+                        $eventNameHi = trim((string) ($row['event_name_hi'] ?? ''));
+                        $eventLocationEn = trim((string) ($row['event_location'] ?? ''));
+                        $eventLocationHi = trim((string) ($row['event_location_hi'] ?? ''));
+                        $eventDescriptionEn = trim((string) ($row['event_description'] ?? ''));
+                        $eventDescriptionHi = trim((string) ($row['event_description_hi'] ?? ''));
+
+                        $eventNameDisplay = $lang === 'hi' && $eventNameHi !== '' ? $eventNameHi : ($eventNameEn !== '' ? $eventNameEn : 'Event');
+                        $eventLocationDisplay = $lang === 'hi' && $eventLocationHi !== '' ? $eventLocationHi : $eventLocationEn;
+                        $eventDescriptionDisplay = $lang === 'hi' && $eventDescriptionHi !== '' ? $eventDescriptionHi : $eventDescriptionEn;
+                        ?>
                         <article class="event-card reveal">
                             <header class="event-card__header">
-                                <h2><?php echo htmlspecialchars($row['event_name'] ?? 'Event'); ?></h2>
+                                <h2><?php echo htmlspecialchars($eventNameDisplay); ?></h2>
                                 <p class="event-date"><?php echo htmlspecialchars($formattedDate); ?></p>
-                                <?php if (!empty($row['event_location'])): ?>
-                                    <p class="event-location"><?php echo htmlspecialchars($row['event_location']); ?></p>
+                                <?php if ($eventLocationDisplay !== ''): ?>
+                                    <p class="event-location"><?php echo htmlspecialchars($eventLocationDisplay); ?></p>
                                 <?php endif; ?>
                             </header>
-                            <?php if (!empty($row['event_description'])): ?>
-                                <p class="event-description"><?php echo nl2br(htmlspecialchars($row['event_description'])); ?></p>
+                            <?php if ($eventDescriptionDisplay !== ''): ?>
+                                <p class="event-description"><?php echo nl2br(htmlspecialchars($eventDescriptionDisplay)); ?></p>
                             <?php endif; ?>
                             <div class="event-images" data-event-date="<?php echo htmlspecialchars($formattedDate); ?>">
                                 <?php

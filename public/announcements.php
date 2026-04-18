@@ -65,10 +65,18 @@ function formatAnnouncementDateLocalized($dateValue, $lang, $hindiMonths)
 $allAnnouncements = [];
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
+        $titleEn = trim((string) ($row['title'] ?? ''));
+        $titleHi = trim((string) ($row['title_hi'] ?? ''));
+        $contentEn = trim((string) ($row['content'] ?? ''));
+        $contentHi = trim((string) ($row['content_hi'] ?? ''));
+
+        $title = $lang === 'hi' && $titleHi !== '' ? $titleHi : ($titleEn !== '' ? $titleEn : 'Announcement');
+        $content = $lang === 'hi' && $contentHi !== '' ? $contentHi : $contentEn;
+
         $allAnnouncements[] = [
-            'title' => $row['title'] ?? 'Announcement',
+            'title' => $title,
             'date' => formatAnnouncementDateLocalized($row['created_at'] ?? '', $lang, $hindiMonths),
-            'content' => $row['content'] ?? '',
+            'content' => $content,
             'images' => array_filter(array_map('trim', explode(',', (string) ($row['images'] ?? '')))),
         ];
     }

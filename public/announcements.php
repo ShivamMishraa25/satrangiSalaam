@@ -5,8 +5,24 @@ include '../includes/db.php';
 $lang = $_GET['lang'] ?? ($_COOKIE['lang'] ?? 'en');
 $lang = ($lang === 'hi' || $lang === 'hindi') ? 'hi' : 'en';
 
-$sql = "SELECT * FROM announcements ORDER BY id DESC";
+$feedPageSize = 6;
+$feedOffset = max(0, (int) ($_GET['offset'] ?? 0));
+$isAjaxFeedRequest = isset($_GET['ajax']) && $_GET['ajax'] === '1';
+
+$totalAnnouncementsResult = $conn->query('SELECT COUNT(*) AS total_count FROM announcements');
+$totalAnnouncementsRow = $totalAnnouncementsResult ? $totalAnnouncementsResult->fetch_assoc() : ['total_count' => 0];
+$totalAnnouncements = (int) ($totalAnnouncementsRow['total_count'] ?? 0);
+
+$sql = 'SELECT * FROM announcements ORDER BY id DESC LIMIT ' . (int) $feedPageSize . ' OFFSET ' . (int) $feedOffset;
 $result = $conn->query($sql);
+$loadedAnnouncements = [];
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $loadedAnnouncements[] = $row;
+    }
+}
+
+$hasMoreAnnouncements = ($feedOffset + count($loadedAnnouncements)) < $totalAnnouncements;
 
 $hindiMonths = ['जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
 
@@ -62,6 +78,106 @@ function formatAnnouncementDateLocalized($dateValue, $lang, $hindiMonths)
     return $date->format('F d, Y');
 }
 
+function pickLocalizedAnnouncementText($english, $hindi, $lang, $fallback = '')
+{
+    $english = trim((string) $english);
+    $hindi = trim((string) $hindi);
+
+    if ($lang === 'hi') {
+        if ($hindi !== '') {
+            return $hindi;
+        }
+        if ($english !== '') {
+            return $english;
+        }
+    } else {
+        if ($english !== '') {
+            return $english;
+        }
+        if ($hindi !== '') {
+            return $hindi;
+        }
+    }
+
+    return $fallback;
+}
+
+function renderAnnouncementCardMarkup($row, $lang, $hindiMonths)
+{
+    $titleEn = trim((string) ($row['title'] ?? ''));
+    $titleHi = trim((string) ($row['title_hi'] ?? ''));
+    $contentEn = trim((string) ($row['content'] ?? ''));
+    $contentHi = trim((string) ($row['content_hi'] ?? ''));
+    $dateRaw = trim((string) ($row['created_at'] ?? ''));
+
+    $title = pickLocalizedAnnouncementText($titleEn, $titleHi, $lang, 'Announcement');
+    $content = pickLocalizedAnnouncementText($contentEn, $contentHi, $lang, '');
+    $date = formatAnnouncementDateLocalized($dateRaw, $lang, $hindiMonths);
+    $images = array_values(array_filter(array_map('trim', explode(',', (string) ($row['images'] ?? '')))));
+
+    ob_start();
+    ?>
+    <article class="bulletin-card reveal js-localized-announcement"
+        data-announcement-title-en="<?php echo htmlspecialchars($titleEn, ENT_QUOTES, 'UTF-8'); ?>"
+        data-announcement-title-hi="<?php echo htmlspecialchars($titleHi, ENT_QUOTES, 'UTF-8'); ?>"
+        data-announcement-content-en="<?php echo htmlspecialchars($contentEn, ENT_QUOTES, 'UTF-8'); ?>"
+        data-announcement-content-hi="<?php echo htmlspecialchars($contentHi, ENT_QUOTES, 'UTF-8'); ?>"
+        data-announcement-date-value="<?php echo htmlspecialchars($dateRaw, ENT_QUOTES, 'UTF-8'); ?>"
+    >
+        <header class="bulletin-card__header">
+            <p class="bulletin-card__date" data-announcement-date-text data-original-date="<?php echo htmlspecialchars($date, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($date, ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php if (!empty($images)): ?>
+                <span class="bulletin-chip"><?php echo htmlspecialchars($lang === 'hi' ? 'नया' : 'Latest', ENT_QUOTES, 'UTF-8'); ?></span>
+            <?php endif; ?>
+        </header>
+        <h2 class="bulletin-card__title"><?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?></h2>
+
+        <?php if ($content !== ''): ?>
+            <p class="bulletin-card__content" data-announcement-content-text><?php echo nl2br(htmlspecialchars($content, ENT_QUOTES, 'UTF-8')); ?></p>
+        <?php endif; ?>
+
+        <?php if (!empty($images)): ?>
+            <div class="bulletin-gallery" data-announcement-date="<?php echo htmlspecialchars($date, ENT_QUOTES, 'UTF-8'); ?>" data-announcement-date-value="<?php echo htmlspecialchars($dateRaw, ENT_QUOTES, 'UTF-8'); ?>">
+                <?php foreach ($images as $image): ?>
+                    <?php
+                    $image = trim((string) $image);
+                    if ($image === '') {
+                        continue;
+                    }
+                    $thumb = announcementThumbUrl($image);
+                    $full = announcementFullUrl($image);
+                    if ($thumb === '' || $full === '') {
+                        continue;
+                    }
+                    ?>
+                    <button class="bulletin-photo" type="button" aria-label="Open announcement image">
+                        <img src="<?php echo htmlspecialchars($thumb, ENT_QUOTES, 'UTF-8'); ?>" data-full-src="<?php echo htmlspecialchars($full, ENT_QUOTES, 'UTF-8'); ?>" alt="Announcement Image" loading="lazy" decoding="async">
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </article>
+    <?php
+    return ob_get_clean();
+}
+
+$announcementCardsHtml = '';
+foreach ($loadedAnnouncements as $row) {
+    $announcementCardsHtml .= renderAnnouncementCardMarkup($row, $lang, $hindiMonths);
+}
+
+if ($isAjaxFeedRequest) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'html' => $announcementCardsHtml,
+        'hasMore' => $hasMoreAnnouncements,
+        'nextOffset' => $feedOffset + count($loadedAnnouncements),
+        'count' => count($loadedAnnouncements),
+    ]);
+    $conn->close();
+    exit();
+}
+
 $allAnnouncements = [];
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -70,8 +186,8 @@ if ($result && $result->num_rows > 0) {
         $contentEn = trim((string) ($row['content'] ?? ''));
         $contentHi = trim((string) ($row['content_hi'] ?? ''));
 
-        $title = $lang === 'hi' && $titleHi !== '' ? $titleHi : ($titleEn !== '' ? $titleEn : 'Announcement');
-        $content = $lang === 'hi' && $contentHi !== '' ? $contentHi : $contentEn;
+        $title = pickLocalizedAnnouncementText($titleEn, $titleHi, $lang, 'Announcement');
+        $content = pickLocalizedAnnouncementText($contentEn, $contentHi, $lang, '');
 
         $allAnnouncements[] = [
             'title' => $title,
@@ -162,59 +278,32 @@ $allAnnouncements = array_merge($allAnnouncements, $legacyNotices);
 
         <section class="bulletin-stream-wrap">
             <div class="bulletin-shell bulletin-stream">
-                <?php if (!empty($allAnnouncements)): ?>
-                    <?php foreach ($allAnnouncements as $index => $entry): ?>
-                        <?php
-                        $title = htmlspecialchars($entry['title'] ?? 'Announcement');
-                        $date = htmlspecialchars($entry['date'] ?? '');
-                        $content = (string) ($entry['content'] ?? '');
-                        $images = $entry['images'] ?? [];
-
-                        $chipLabel = '';
-                        if ($index === 0) {
-                            $chipLabel = 'Latest';
-                        } elseif ($index > 0 && $index <= 4) {
-                            $chipLabel = 'Recent';
-                        }
-                        ?>
-                        <article class="bulletin-card reveal">
-                            <header class="bulletin-card__header">
-                                <p class="bulletin-card__date"><?php echo $date; ?></p>
-                                <?php if ($chipLabel !== ''): ?>
-                                    <span class="bulletin-chip"><?php echo $chipLabel; ?></span>
+                <div id="announcementDynamicFeed" data-next-offset="<?php echo (int) ($feedOffset + count($loadedAnnouncements)); ?>" data-has-more="<?php echo $hasMoreAnnouncements ? '1' : '0'; ?>">
+                    <?php echo $announcementCardsHtml; ?>
+                </div>
+                <div id="announcementFeedSentinel" class="feed-sentinel" aria-hidden="true"></div>
+                <div id="announcementLegacyFeed">
+                    <?php if (!empty($legacyNotices)): ?>
+                        <?php foreach ($legacyNotices as $entry): ?>
+                            <?php
+                            $title = htmlspecialchars($entry['title'] ?? 'Announcement');
+                            $date = htmlspecialchars($entry['date'] ?? '');
+                            $content = (string) ($entry['content'] ?? '');
+                            ?>
+                            <article class="bulletin-card reveal">
+                                <header class="bulletin-card__header">
+                                    <p class="bulletin-card__date"><?php echo $date; ?></p>
+                                </header>
+                                <h2><?php echo $title; ?></h2>
+                                <?php if ($content !== ''): ?>
+                                    <p class="bulletin-card__content"><?php echo nl2br(htmlspecialchars($content)); ?></p>
                                 <?php endif; ?>
-                            </header>
-                            <h2><?php echo $title; ?></h2>
-
-                            <?php if ($content !== ''): ?>
-                                <p class="bulletin-card__content"><?php echo nl2br(htmlspecialchars($content)); ?></p>
-                            <?php endif; ?>
-
-                            <?php if (!empty($images)): ?>
-                                <div class="bulletin-gallery" data-announcement-date="<?php echo $date; ?>">
-                                    <?php foreach ($images as $image): ?>
-                                        <?php
-                                        $image = trim((string) $image);
-                                        if ($image === '') {
-                                            continue;
-                                        }
-                                        $thumb = announcementThumbUrl($image);
-                                        $full = announcementFullUrl($image);
-                                        if ($thumb === '' || $full === '') {
-                                            continue;
-                                        }
-                                        ?>
-                                        <button class="bulletin-photo" type="button" aria-label="Open announcement image">
-                                            <img src="<?php echo htmlspecialchars($thumb); ?>" data-full-src="<?php echo htmlspecialchars($full); ?>" alt="Announcement Image" loading="lazy" decoding="async">
-                                        </button>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-                        </article>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p class="bulletin-empty is-visible" data-i18n="noAnnouncements">No announcements available.</p>
-                <?php endif; ?>
+                            </article>
+                        <?php endforeach; ?>
+                    <?php elseif (empty($loadedAnnouncements)): ?>
+                        <p class="bulletin-empty is-visible" data-i18n="noAnnouncements">No announcements available.</p>
+                    <?php endif; ?>
+                </div>
             </div>
         </section>
     </main>

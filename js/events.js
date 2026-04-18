@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   'use strict';
 
   const translations = {
@@ -20,6 +20,16 @@
     }
   };
 
+  const englishMonths = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const hindiMonths = [
+    'जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून',
+    'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'
+  ];
+
   function getInitialLang() {
     try {
       if (typeof window.__INITIAL_LANG__ === 'string' && window.__INITIAL_LANG__.length) {
@@ -29,7 +39,7 @@
 
       const params = new URLSearchParams(window.location.search);
       const qLang = (params.get('lang') || '').toLowerCase();
-      const cookieMatch = document.cookie.match(/(?:^|;\\s*)lang=([^;]+)/);
+      const cookieMatch = document.cookie.match(/(?:^|;\s*)lang=([^;]+)/);
       const cookieLang = cookieMatch ? decodeURIComponent(cookieMatch[1]) : '';
       const lang = (qLang || cookieLang || '').toLowerCase();
       return (lang === 'hi' || lang === 'hindi') ? 'hi' : 'en';
@@ -56,13 +66,14 @@
     }
   }
 
-  function applyLanguage(lang) {
-    const dict = translations[lang];
+  function applySharedLanguage(lang) {
+    const normalized = lang === 'hi' ? 'hi' : 'en';
+    const dict = translations[normalized];
     if (!dict) return;
 
-    persistLang(lang);
-    document.documentElement.lang = lang === 'hi' ? 'hi' : 'en';
-    document.body.classList.toggle('hindi', lang === 'hi');
+    persistLang(normalized);
+    document.documentElement.lang = normalized;
+    document.body.classList.toggle('hindi', normalized === 'hi');
 
     document.querySelectorAll('[data-i18n]').forEach((el) => {
       const key = el.getAttribute('data-i18n');
@@ -72,15 +83,162 @@
     });
 
     const btn = document.querySelector('.translate-btn');
-    if (btn) btn.textContent = lang === 'hi' ? 'English' : 'हिंदी';
+    if (btn) btn.textContent = normalized === 'hi' ? 'English' : 'हिंदी';
 
     if (window.SharedLayout && typeof window.SharedLayout.applySharedTranslations === 'function') {
-      window.SharedLayout.applySharedTranslations(lang === 'hi' ? 'hindi' : 'english');
+      window.SharedLayout.applySharedTranslations(normalized === 'hi' ? 'hindi' : 'english');
     }
+
+    translateEventCards(document, normalized);
+    document.dispatchEvent(new CustomEvent('events:language-changed', { detail: { lang: normalized } }));
   }
 
-  function initImageLoadingState() {
-    const buttons = document.querySelectorAll('.event-image-btn');
+  function escapeHtml(text) {
+    return String(text || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function pickLocalizedText(english, hindi, lang, fallback) {
+    const en = String(english || '').trim();
+    const hi = String(hindi || '').trim();
+
+    if (lang === 'hi') {
+      if (hi) return hi;
+      if (en) return en;
+    } else {
+      if (en) return en;
+      if (hi) return hi;
+    }
+
+    return fallback || '';
+  }
+
+  function formatEventDateValue(rawValue, lang) {
+    const value = String(rawValue || '').trim();
+    if (!value) return '';
+
+    let date = null;
+    if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
+      const [year, month, day] = value.split(' ')[0].split('-').map((part) => parseInt(part, 10));
+      if (year && month && day) {
+        date = new Date(year, month - 1, day);
+      }
+    } else {
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        date = parsed;
+      }
+    }
+
+    if (!date || Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthIndex = date.getMonth();
+    const year = String(date.getFullYear());
+    if (lang === 'hi') {
+      return day + ' ' + hindiMonths[monthIndex] + ' ' + year;
+    }
+
+    return englishMonths[monthIndex] + ' ' + day + ', ' + year;
+  }
+
+  function translateEventCards(root, lang) {
+    const scope = root || document;
+
+    scope.querySelectorAll('.js-localized-event').forEach((card) => {
+      const titleEn = card.getAttribute('data-event-name-en') || '';
+      const titleHi = card.getAttribute('data-event-name-hi') || '';
+      const locationEn = card.getAttribute('data-event-location-en') || '';
+      const locationHi = card.getAttribute('data-event-location-hi') || '';
+      const descriptionEn = card.getAttribute('data-event-description-en') || '';
+      const descriptionHi = card.getAttribute('data-event-description-hi') || '';
+      const dateValue = card.getAttribute('data-event-date-value') || '';
+
+      const title = pickLocalizedText(titleEn, titleHi, lang, 'Event');
+      const location = pickLocalizedText(locationEn, locationHi, lang, '');
+      const description = pickLocalizedText(descriptionEn, descriptionHi, lang, '');
+      const date = formatEventDateValue(dateValue, lang);
+
+      const titleEl = card.querySelector('.event-card__title');
+      if (titleEl) titleEl.textContent = title;
+
+      const dateEl = card.querySelector('.event-date');
+      if (dateEl) dateEl.textContent = date;
+
+      const locationEl = card.querySelector('.event-location');
+      if (locationEl) {
+        if (location) {
+          locationEl.textContent = location;
+          locationEl.hidden = false;
+        } else {
+          locationEl.textContent = '';
+          locationEl.hidden = true;
+        }
+      }
+
+      const descriptionEl = card.querySelector('.event-description');
+      if (descriptionEl) {
+        if (description) {
+          descriptionEl.innerHTML = escapeHtml(description).replace(/\n/g, '<br>');
+          descriptionEl.hidden = false;
+        } else {
+          descriptionEl.textContent = '';
+          descriptionEl.hidden = true;
+        }
+      }
+
+      const images = card.querySelector('.event-images');
+      if (images && date) {
+        images.setAttribute('data-event-date', date);
+      }
+    });
+  }
+
+  function initReveal(root) {
+    const scope = root || document;
+    const revealItems = scope.querySelectorAll('.reveal');
+    if (!revealItems.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      revealItems.forEach((item) => item.classList.add('is-visible'));
+      return;
+    }
+
+    if (!window.__eventRevealObserver) {
+      window.__eventRevealObserver = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          obs.unobserve(entry.target);
+        });
+      }, {
+        threshold: 0.15,
+        rootMargin: '0px 0px -30px 0px'
+      });
+    }
+
+    revealItems.forEach((item) => window.__eventRevealObserver.observe(item));
+  }
+
+  function initDenseImageGroups(root) {
+    const scope = root || document;
+    const groups = scope.querySelectorAll('.event-images');
+
+    groups.forEach((group) => {
+      const imageCount = group.querySelectorAll('.event-image-btn').length;
+      group.classList.toggle('event-images--dense', imageCount >= 4);
+    });
+  }
+
+  function initImageLoadingState(root) {
+    const scope = root || document;
+    const buttons = scope.querySelectorAll('.event-image-btn');
 
     buttons.forEach((button) => {
       const img = button.querySelector('img');
@@ -96,15 +254,6 @@
     });
   }
 
-  function initDenseImageGroups() {
-    const groups = document.querySelectorAll('.event-images');
-
-    groups.forEach((group) => {
-      const imageCount = group.querySelectorAll('.event-image-btn').length;
-      group.classList.toggle('event-images--dense', imageCount >= 4);
-    });
-  }
-
   function initLightbox() {
     const lightbox = document.getElementById('eventLightbox');
     const imageEl = document.getElementById('eventLightboxImage');
@@ -116,31 +265,31 @@
 
     if (!lightbox || !imageEl || !captionEl) return;
 
-    const triggerButtons = Array.from(document.querySelectorAll('.event-image-btn'));
-    if (!triggerButtons.length) return;
+    const state = {
+      items: [],
+      index: 0
+    };
 
-    const items = triggerButtons.map((button) => {
-      const img = button.querySelector('img');
-      const parent = button.closest('.event-images');
-      const eventDate = parent ? (parent.getAttribute('data-event-date') || '').trim() : '';
+    function getItems() {
+      return Array.from(document.querySelectorAll('.event-image-btn')).map((button) => {
+        const img = button.querySelector('img');
+        const parent = button.closest('.event-images');
+        const eventDate = parent ? (parent.getAttribute('data-event-date') || '').trim() : '';
 
-      const fullSrc = img ? (img.getAttribute('data-full-src') || img.src || '') : '';
-      const thumbSrc = img ? (img.src || '') : '';
-
-      return {
-        fullSrc,
-        thumbSrc,
-        eventDate
-      };
-    });
-
-    let currentIndex = 0;
+        return {
+          fullSrc: img ? (img.getAttribute('data-full-src') || img.src || '') : '',
+          thumbSrc: img ? (img.src || '') : '',
+          eventDate
+        };
+      });
+    }
 
     function render(index) {
-      const item = items[index];
+      state.items = getItems();
+      const item = state.items[index];
       if (!item) return;
 
-      currentIndex = index;
+      state.index = index;
       imageEl.src = item.fullSrc || item.thumbSrc;
 
       const lang = document.documentElement.lang === 'hi' ? 'hi' : 'en';
@@ -169,17 +318,28 @@
     }
 
     function prev() {
-      const nextIndex = (currentIndex - 1 + items.length) % items.length;
+      const items = getItems();
+      if (!items.length) return;
+      const nextIndex = (state.index - 1 + items.length) % items.length;
       render(nextIndex);
     }
 
     function next() {
-      const nextIndex = (currentIndex + 1) % items.length;
+      const items = getItems();
+      if (!items.length) return;
+      const nextIndex = (state.index + 1) % items.length;
       render(nextIndex);
     }
 
-    triggerButtons.forEach((button, index) => {
-      button.addEventListener('click', () => open(index));
+    document.addEventListener('click', (event) => {
+      const button = event.target instanceof HTMLElement ? event.target.closest('.event-image-btn') : null;
+      if (!button) return;
+
+      const buttons = Array.from(document.querySelectorAll('.event-image-btn'));
+      const index = buttons.indexOf(button);
+      if (index >= 0) {
+        open(index);
+      }
     });
 
     if (closeBtn) closeBtn.addEventListener('click', close);
@@ -196,44 +356,110 @@
       if (event.key === 'ArrowLeft') prev();
       if (event.key === 'ArrowRight') next();
     });
+
+    document.addEventListener('events:language-changed', () => {
+      if (lightbox.classList.contains('is-open')) {
+        render(state.index);
+      }
+    });
   }
 
-  function initReveal() {
-    const revealItems = document.querySelectorAll('.reveal');
-    if (!revealItems.length) return;
+  function initInfiniteScroll() {
+    const feed = document.getElementById('eventsDynamicFeed');
+    const sentinel = document.getElementById('eventsFeedSentinel');
+    if (!feed || !sentinel) return;
 
-    if (!('IntersectionObserver' in window)) {
-      revealItems.forEach((item) => item.classList.add('is-visible'));
-      return;
+    let nextOffset = parseInt(feed.getAttribute('data-next-offset') || '0', 10);
+    let hasMore = feed.getAttribute('data-has-more') === '1';
+    let isLoading = false;
+
+    function appendHtml(html) {
+      if (!html) return;
+
+      const template = document.createElement('template');
+      template.innerHTML = html;
+      const fragment = template.content;
+
+      translateEventCards(fragment, document.documentElement.lang === 'hi' ? 'hi' : 'en');
+      initReveal(fragment);
+      initDenseImageGroups(fragment);
+      initImageLoadingState(fragment);
+
+      feed.appendChild(fragment);
     }
 
-    const observer = new IntersectionObserver((entries, obs) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        obs.unobserve(entry.target);
-      });
-    }, {
-      threshold: 0.15,
-      rootMargin: '0px 0px -30px 0px'
-    });
+    function loadMore() {
+      if (!hasMore || isLoading) return;
+      isLoading = true;
 
-    revealItems.forEach((item) => observer.observe(item));
+      const lang = document.documentElement.lang === 'hi' ? 'hi' : 'en';
+      const url = new URL(window.location.href);
+      url.searchParams.set('ajax', '1');
+      url.searchParams.set('offset', String(nextOffset));
+      url.searchParams.set('lang', lang);
+
+      fetch(url.toString(), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data && data.html) {
+            appendHtml(data.html);
+          }
+
+          nextOffset = data && typeof data.nextOffset === 'number' ? data.nextOffset : nextOffset;
+          hasMore = !!(data && data.hasMore);
+          feed.setAttribute('data-next-offset', String(nextOffset));
+          feed.setAttribute('data-has-more', hasMore ? '1' : '0');
+
+          if (!hasMore && observer) {
+            observer.disconnect();
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          isLoading = false;
+        });
+    }
+
+    let observer = null;
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            loadMore();
+          }
+        });
+      }, {
+        rootMargin: '300px 0px',
+        threshold: 0.1
+      });
+      observer.observe(sentinel);
+    } else {
+      const onScroll = () => {
+        const distance = document.documentElement.scrollHeight - window.scrollY - window.innerHeight;
+        if (distance < 500) {
+          loadMore();
+        }
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
   }
 
   function init() {
     const initialLang = getInitialLang();
-    let isHindi = initialLang === 'hi';
 
-    applyLanguage(initialLang);
-    initDenseImageGroups();
-    initImageLoadingState();
+    applySharedLanguage(initialLang);
+    initDenseImageGroups(document);
+    initImageLoadingState(document);
     initLightbox();
-    initReveal();
+    initReveal(document);
+    initInfiniteScroll();
 
     window.toggleLanguage = function () {
-      isHindi = !isHindi;
-      applyLanguage(isHindi ? 'hi' : 'en');
+      const nextLang = document.documentElement.lang === 'hi' ? 'en' : 'hi';
+      applySharedLanguage(nextLang);
     };
   }
 

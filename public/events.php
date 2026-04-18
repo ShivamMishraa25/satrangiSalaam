@@ -5,8 +5,24 @@ include '../includes/db.php';
 $lang = $_GET['lang'] ?? ($_COOKIE['lang'] ?? 'en');
 $lang = ($lang === 'hi' || $lang === 'hindi') ? 'hi' : 'en';
 
-$sql = "SELECT * FROM events ORDER BY event_date DESC";
+$feedPageSize = 6;
+$feedOffset = max(0, (int) ($_GET['offset'] ?? 0));
+$isAjaxFeedRequest = isset($_GET['ajax']) && $_GET['ajax'] === '1';
+
+$totalEventsResult = $conn->query('SELECT COUNT(*) AS total_count FROM events');
+$totalEventsRow = $totalEventsResult ? $totalEventsResult->fetch_assoc() : ['total_count' => 0];
+$totalEvents = (int) ($totalEventsRow['total_count'] ?? 0);
+
+$sql = 'SELECT * FROM events ORDER BY event_date DESC, id DESC LIMIT ' . (int) $feedPageSize . ' OFFSET ' . (int) $feedOffset;
 $result = $conn->query($sql);
+$loadedEventRows = [];
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $loadedEventRows[] = $row;
+    }
+}
+
+$hasMoreEvents = ($feedOffset + count($loadedEventRows)) < $totalEvents;
 
 $hindiMonths = [
     'January' => 'जनवरी',
@@ -79,6 +95,116 @@ function formatEventDateLocalized($dateValue, $lang, $hindiMonths)
 
     return $date->format('F d, Y');
 }
+
+function pickLocalizedEventText($english, $hindi, $lang, $fallback = '')
+{
+    $english = trim((string) $english);
+    $hindi = trim((string) $hindi);
+
+    if ($lang === 'hi') {
+        if ($hindi !== '') {
+            return $hindi;
+        }
+        if ($english !== '') {
+            return $english;
+        }
+    } else {
+        if ($english !== '') {
+            return $english;
+        }
+        if ($hindi !== '') {
+            return $hindi;
+        }
+    }
+
+    return $fallback;
+}
+
+function renderEventCardMarkup($row, $lang, $hindiMonths)
+{
+    $eventNameEn = trim((string) ($row['event_name'] ?? ''));
+    $eventNameHi = trim((string) ($row['event_name_hi'] ?? ''));
+    $eventLocationEn = trim((string) ($row['event_location'] ?? ''));
+    $eventLocationHi = trim((string) ($row['event_location_hi'] ?? ''));
+    $eventDescriptionEn = trim((string) ($row['event_description'] ?? ''));
+    $eventDescriptionHi = trim((string) ($row['event_description_hi'] ?? ''));
+    $eventDateValue = trim((string) ($row['event_date'] ?? ''));
+
+    $eventNameDisplay = pickLocalizedEventText($eventNameEn, $eventNameHi, $lang, 'Event');
+    $eventLocationDisplay = pickLocalizedEventText($eventLocationEn, $eventLocationHi, $lang, '');
+    $eventDescriptionDisplay = pickLocalizedEventText($eventDescriptionEn, $eventDescriptionHi, $lang, '');
+    $formattedDate = formatEventDateLocalized($eventDateValue, $lang, $hindiMonths);
+    $images = array_values(array_filter(array_map('trim', explode(',', (string) ($row['event_image'] ?? '')))));
+
+    ob_start();
+    ?>
+    <article class="event-card reveal js-localized-event"
+        data-event-name-en="<?php echo htmlspecialchars($eventNameEn, ENT_QUOTES, 'UTF-8'); ?>"
+        data-event-name-hi="<?php echo htmlspecialchars($eventNameHi, ENT_QUOTES, 'UTF-8'); ?>"
+        data-event-location-en="<?php echo htmlspecialchars($eventLocationEn, ENT_QUOTES, 'UTF-8'); ?>"
+        data-event-location-hi="<?php echo htmlspecialchars($eventLocationHi, ENT_QUOTES, 'UTF-8'); ?>"
+        data-event-description-en="<?php echo htmlspecialchars($eventDescriptionEn, ENT_QUOTES, 'UTF-8'); ?>"
+        data-event-description-hi="<?php echo htmlspecialchars($eventDescriptionHi, ENT_QUOTES, 'UTF-8'); ?>"
+        data-event-date-value="<?php echo htmlspecialchars($eventDateValue, ENT_QUOTES, 'UTF-8'); ?>"
+    >
+        <header class="event-card__header">
+            <h2 class="event-card__title"><?php echo htmlspecialchars($eventNameDisplay, ENT_QUOTES, 'UTF-8'); ?></h2>
+            <p class="event-date" data-event-date-text><?php echo htmlspecialchars($formattedDate, ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php if ($eventLocationDisplay !== ''): ?>
+                <p class="event-location" data-event-location-text><?php echo htmlspecialchars($eventLocationDisplay, ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php endif; ?>
+        </header>
+        <?php if ($eventDescriptionDisplay !== ''): ?>
+            <p class="event-description" data-event-description-text><?php echo nl2br(htmlspecialchars($eventDescriptionDisplay, ENT_QUOTES, 'UTF-8')); ?></p>
+        <?php endif; ?>
+        <?php if (!empty($images)): ?>
+            <div class="event-images" data-event-date="<?php echo htmlspecialchars($formattedDate, ENT_QUOTES, 'UTF-8'); ?>" data-event-date-value="<?php echo htmlspecialchars($eventDateValue, ENT_QUOTES, 'UTF-8'); ?>">
+                <?php foreach ($images as $image): ?>
+                    <?php
+                    $image = trim((string) $image);
+                    if ($image === '') {
+                        continue;
+                    }
+
+                    $fullUrl = eventFullUrl($image);
+                    $thumbUrl = eventThumbUrl($image);
+                    if ($fullUrl === '' || $thumbUrl === '') {
+                        continue;
+                    }
+                    ?>
+                    <button class="event-image-btn" type="button" aria-label="Open event image">
+                        <img
+                            src="<?php echo htmlspecialchars($thumbUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                            data-full-src="<?php echo htmlspecialchars($fullUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                            alt="Event Image"
+                            loading="lazy"
+                            decoding="async"
+                        >
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </article>
+    <?php
+    return ob_get_clean();
+}
+
+$eventCardsHtml = '';
+foreach ($loadedEventRows as $row) {
+    $eventCardsHtml .= renderEventCardMarkup($row, $lang, $hindiMonths);
+}
+
+if ($isAjaxFeedRequest) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'html' => $eventCardsHtml,
+        'hasMore' => $hasMoreEvents,
+        'nextOffset' => $feedOffset + count($loadedEventRows),
+        'count' => count($loadedEventRows),
+    ]);
+    $conn->close();
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang === 'hi' ? 'hi' : 'en'; ?>">
@@ -128,61 +254,10 @@ function formatEventDateLocalized($dateValue, $lang, $hindiMonths)
 
         <section class="events-section">
             <div class="events-container">
-                <?php if ($result && $result->num_rows > 0): ?>
-                    <?php while ($row = $result->fetch_assoc()): ?>
-                        <?php $formattedDate = formatEventDateLocalized($row['event_date'] ?? '', $lang, $hindiMonths); ?>
-                        <?php
-                        $eventNameEn = trim((string) ($row['event_name'] ?? ''));
-                        $eventNameHi = trim((string) ($row['event_name_hi'] ?? ''));
-                        $eventLocationEn = trim((string) ($row['event_location'] ?? ''));
-                        $eventLocationHi = trim((string) ($row['event_location_hi'] ?? ''));
-                        $eventDescriptionEn = trim((string) ($row['event_description'] ?? ''));
-                        $eventDescriptionHi = trim((string) ($row['event_description_hi'] ?? ''));
-
-                        $eventNameDisplay = $lang === 'hi' && $eventNameHi !== '' ? $eventNameHi : ($eventNameEn !== '' ? $eventNameEn : 'Event');
-                        $eventLocationDisplay = $lang === 'hi' && $eventLocationHi !== '' ? $eventLocationHi : $eventLocationEn;
-                        $eventDescriptionDisplay = $lang === 'hi' && $eventDescriptionHi !== '' ? $eventDescriptionHi : $eventDescriptionEn;
-                        ?>
-                        <article class="event-card reveal">
-                            <header class="event-card__header">
-                                <h2><?php echo htmlspecialchars($eventNameDisplay); ?></h2>
-                                <p class="event-date"><?php echo htmlspecialchars($formattedDate); ?></p>
-                                <?php if ($eventLocationDisplay !== ''): ?>
-                                    <p class="event-location"><?php echo htmlspecialchars($eventLocationDisplay); ?></p>
-                                <?php endif; ?>
-                            </header>
-                            <?php if ($eventDescriptionDisplay !== ''): ?>
-                                <p class="event-description"><?php echo nl2br(htmlspecialchars($eventDescriptionDisplay)); ?></p>
-                            <?php endif; ?>
-                            <div class="event-images" data-event-date="<?php echo htmlspecialchars($formattedDate); ?>">
-                                <?php
-                                $images = explode(',', $row['event_image'] ?? '');
-                                foreach ($images as $image) {
-                                    $image = trim($image);
-                                    if ($image === '') {
-                                        continue;
-                                    }
-
-                                    $fullUrl = eventFullUrl($image);
-                                    $thumbUrl = eventThumbUrl($image);
-                                    if ($fullUrl === '' || $thumbUrl === '') {
-                                        continue;
-                                    }
-                                    ?>
-                                    <button class="event-image-btn" type="button" aria-label="Open event image">
-                                        <img
-                                            src="<?php echo htmlspecialchars($thumbUrl); ?>"
-                                            data-full-src="<?php echo htmlspecialchars($fullUrl); ?>"
-                                            alt="Event Image"
-                                            loading="lazy"
-                                            decoding="async"
-                                        >
-                                    </button>
-                                <?php } ?>
-                            </div>
-                        </article>
-                    <?php endwhile; ?>
-                <?php endif; ?>
+                <div id="eventsDynamicFeed" data-next-offset="<?php echo (int) ($feedOffset + count($loadedEventRows)); ?>" data-has-more="<?php echo $hasMoreEvents ? '1' : '0'; ?>">
+                    <?php echo $eventCardsHtml; ?>
+                </div>
+                <div id="eventsFeedSentinel" class="feed-sentinel" aria-hidden="true"></div>
 
                 <article class="event-card reveal" id="event1">
                     <header class="event-card__header">
